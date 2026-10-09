@@ -31,7 +31,6 @@ class TimeSyncController(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(TimeSyncController, self).__init__(*args, **kwargs)
         self.mac_to_port = {}
-        self.sync_flow_installed = set()
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -149,16 +148,17 @@ class TimeSyncController(app_manager.RyuApp):
             out_port = self.mac_to_port[dpid].get(eth.dst, ofproto.OFPP_FLOOD)
 
             if out_port != ofproto.OFPP_FLOOD:
-                key = (dpid, in_port, eth.dst, udp_pkt.dst_port == SYNC_PORT)
-                if key not in self.sync_flow_installed:
-                    self.install_sync_flow(
-                        datapath,
-                        in_port,
-                        ip_pkt,
-                        udp_pkt,
-                        out_port
-                    )
-                    self.sync_flow_installed.add(key)
+                # No controller-side "already installed" cache: a packet-in
+                # for sync traffic means the switch has no matching flow
+                # (never installed, or expired via idle_timeout), so always
+                # (re)install. Re-sending an identical flow-mod is idempotent.
+                self.install_sync_flow(
+                    datapath,
+                    in_port,
+                    ip_pkt,
+                    udp_pkt,
+                    out_port
+                )
 
                 # Send this first packet onward immediately.
                 actions = [parser.OFPActionOutput(out_port)]
