@@ -93,6 +93,9 @@ class TimeSyncController(app_manager.RyuApp):
         else:
             match_kwargs["udp_src"] = SYNC_PORT
             match_kwargs["ipv4_src"] = ip_pkt.src
+            # Reply flows must also be scoped to the destination client:
+            # the output port depends on WHICH client the reply is for.
+            match_kwargs["ipv4_dst"] = ip_pkt.dst
 
         match = parser.OFPMatch(**match_kwargs)
 
