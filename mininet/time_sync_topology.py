@@ -60,7 +60,7 @@ def run():
     info("*** h1 = time server 10.0.0.1\n")
     info("*** h2 = client 1     10.0.0.2\n")
     info("*** h3 = client 2     10.0.0.3\n")
-    info("*** Run 'pingall' before the socket demo.\n")
+    info("*** Run order: start the server and clients FIRST; run pingall only AFTERWARD.\n")
 
     CLI(net)
 
