@@ -1,0 +1,14 @@
+
+=== TRACK C ROBUSTNESS EVALUATION ===
+Test              : load_delay
+Server            : 10.0.0.1:5000
+Samples requested : 20
+Successful        : 20
+Timeout/errors    : 0
+Average RTT (ms)  : 96.789
+Average offset(ms): -76.763
+Mean abs error(ms): 23.237
+Min/Max RTT (ms)  : 84.474 / 101.317
+CSV results       : /home/seed/Network-Time-Synchronization/track_c/results/actual_sdn_results/P4_load_delay.csv
+====================================
+

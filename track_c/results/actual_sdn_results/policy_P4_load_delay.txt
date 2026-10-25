@@ -1,0 +1,4 @@
+DYNAMIC SDN: dpid=1 traffic high (10061350 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (1512 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic high (9975362 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (3024 bytes/interval); sync priority policy = 100

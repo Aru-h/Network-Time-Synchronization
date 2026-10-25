@@ -5,10 +5,10 @@ Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 0.397
-Average offset(ms): -99.943
-Mean abs error(ms): 0.062
-Min/Max RTT (ms)  : 0.243 / 0.848
-CSV results       : /home/claude/topic23_d2_network_time_synchronization/track_c/results/actual_sdn_results/P3a_load_under.csv
+Average RTT (ms)  : 0.321
+Average offset(ms): -99.980
+Mean abs error(ms): 0.045
+Min/Max RTT (ms)  : 0.123 / 0.791
+CSV results       : /home/seed/Network-Time-Synchronization/track_c/results/actual_sdn_results/P3a_load_under.csv
 ====================================
 

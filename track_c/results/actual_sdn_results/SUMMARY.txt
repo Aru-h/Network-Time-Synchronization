@@ -1,29 +1,28 @@
 P1_baseline      PASS
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.798  rtt_x_baseline=-  mean_abs_offset_err_ms=0.193
-P2_delay         SKIPPED (no netem kernel module)
-    samples_ok=0/0  loss%=-  avg_rtt_ms=-  rtt_x_baseline=-  mean_abs_offset_err_ms=-
-    delay tests need netem; run on a machine that has it
-P3a_load_under   CONTROL OK - no congestion, as expected [avg RTT 0.40 ms = 0.5x P1 baseline (0.80 ms)]
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.397  rtt_x_baseline=0.5  mean_abs_offset_err_ms=0.062
-    load=10M offered, server_rx=10.5Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0
-P3b_load_over    CONGESTION ACHIEVED [avg RTT 56.63 ms = 71.0x P1 baseline (0.80 ms)]
-    samples_ok=10/20  loss%=50  avg_rtt_ms=56.629  rtt_x_baseline=71.0  mean_abs_offset_err_ms=28.101
-    load=30M offered, server_rx=19.4Mbps loss=38.0%, load_still_running_at_dump=True, controller_pkts=0
-P4_load_delay    SKIPPED (no netem kernel module)
-    samples_ok=0/0  loss%=-  avg_rtt_ms=-  rtt_x_baseline=-  mean_abs_offset_err_ms=-
-    load+delay test needs netem
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.383  rtt_x_baseline=-  mean_abs_offset_err_ms=0.065
+P2_delay         DELAY ACHIEVED [avg RTT 51.98 ms vs baseline 0.38 ms]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=51.983  rtt_x_baseline=135.8  mean_abs_offset_err_ms=0.241
+P3a_load_under   CONTROL OK - no congestion, as expected [avg RTT 0.32 ms = 0.8x P1 baseline (0.38 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.321  rtt_x_baseline=0.8  mean_abs_offset_err_ms=0.045
+    load=10M offered, server_rx=10.5Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=4
+P3b_load_over    CONGESTION ACHIEVED [avg RTT 41.49 ms = 108.4x P1 baseline (0.38 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=41.491  rtt_x_baseline=108.4  mean_abs_offset_err_ms=20.609
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0
+P4_load_delay    NO CONGESTION ACHIEVED [avg RTT 96.79 ms = 1.9x P2 delay-only baseline (51.98 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=96.789  rtt_x_baseline=1.9  mean_abs_offset_err_ms=23.237
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=1
 P5_recovery_down PASS
     samples_ok=0/20  loss%=100  avg_rtt_ms=-  rtt_x_baseline=-  mean_abs_offset_err_ms=-
 P6_recovery_up   PASS
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.650  rtt_x_baseline=-  mean_abs_offset_err_ms=0.166
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.304  rtt_x_baseline=-  mean_abs_offset_err_ms=0.047
 
-netem_available=False
-ovs_datapath=user
-ovs=ovs-vsctl (Open vSwitch) 3.3.9
+netem_available=True
+ovs_datapath=kernel
+ovs=ovs-vsctl (Open vSwitch) 3.7.1
 load_tool=iperf
 bottleneck_mbps(h1 link)=20
 edge_mbps(h2,h3,h4 links)=100
 under_load_mbps=10
 over_load_mbps=30
-python=3.13.16
-ryu_manager=/tmp/rbin/ryu-manager
+python=3.14.4
+ryu_manager=/home/seed/topic23-venv/bin/ryu-manager

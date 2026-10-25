@@ -1,59 +1,49 @@
-loading app /home/claude/topic23_d2_network_time_synchronization/controller/d2_adaptive_controller.py
+loading app /home/seed/Network-Time-Synchronization/controller/d2_adaptive_controller.py
 loading app ryu.controller.ofp_handler
-instantiating app /home/claude/topic23_d2_network_time_synchronization/controller/d2_adaptive_controller.py of AdaptiveTimeSyncController
+instantiating app /home/seed/Network-Time-Synchronization/controller/d2_adaptive_controller.py of AdaptiveTimeSyncController
 instantiating app ryu.controller.ofp_handler of OFPHandler
 D2 SWITCH CONNECTED dpid=1
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (4422 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SYNC FLOW: dpid=1 in=2 out=1 udp/5000 priority=100
 SOCKET-SDN D2 EVENT: sync packet 10.0.0.2 -> 10.0.0.1
 DYNAMIC SYNC FLOW: dpid=1 in=1 out=2 udp/5000 priority=100
 SOCKET-SDN D2 EVENT: sync packet 10.0.0.1 -> 10.0.0.2
-DYNAMIC SYNC FLOW: dpid=1 in=2 out=1 udp/5000 priority=100
-SOCKET-SDN D2 EVENT: sync packet 10.0.0.2 -> 10.0.0.1
-DYNAMIC SDN: dpid=1 traffic normal (3266 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (5356 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (3872 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (6574 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (4990 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 BACKGROUND TRAFFIC: 10.0.0.4 -> 10.0.0.1 UDP/6000
 BACKGROUND TRAFFIC: 10.0.0.4 -> 10.0.0.1 UDP/6000
-BACKGROUND TRAFFIC: 10.0.0.4 -> 10.0.0.1 UDP/6000
-DYNAMIC SDN: dpid=1 traffic high (5065200 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (1951048 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (3024 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic high (5394648 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (5402980 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (3670976 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (573740 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (9849168 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13099273 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13086427 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13097360 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (1789124 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (1512 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13089628 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (10014672 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13090896 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (9969048 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13092828 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (2976804 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13097012 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (5508216 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13094340 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic high (10061350 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (1512 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic high (9975362 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (3024 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic high (4686288 bytes/interval); sync priority policy = 200
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13091316 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: dpid=1 traffic normal (1102 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13080380 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (13081892 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic high (7482696 bytes/interval); sync priority policy = 200
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (324 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (394 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (324 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
@@ -69,9 +59,13 @@ DYNAMIC SDN: dpid=1 traffic normal (324 bytes/interval); sync priority policy = 
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (324 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (324 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (468 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
@@ -79,23 +73,17 @@ DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (1596 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (678 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (328 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (398 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100
-DYNAMIC SDN: dpid=1 traffic normal (2436 bytes/interval); sync priority policy = 100
+DYNAMIC SDN: dpid=1 traffic normal (3132 bytes/interval); sync priority policy = 100
 DYNAMIC SDN: dpid=1 traffic normal (0 bytes/interval); sync priority policy = 100

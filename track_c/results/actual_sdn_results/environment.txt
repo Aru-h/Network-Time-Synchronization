@@ -1,10 +1,10 @@
-netem_available=False
-ovs_datapath=user
-ovs=ovs-vsctl (Open vSwitch) 3.3.9
+netem_available=True
+ovs_datapath=kernel
+ovs=ovs-vsctl (Open vSwitch) 3.7.1
 load_tool=iperf
 bottleneck_mbps(h1 link)=20
 edge_mbps(h2,h3,h4 links)=100
 under_load_mbps=10
 over_load_mbps=30
-python=3.13.16
-ryu_manager=/tmp/rbin/ryu-manager
+python=3.14.4
+ryu_manager=/home/seed/topic23-venv/bin/ryu-manager
