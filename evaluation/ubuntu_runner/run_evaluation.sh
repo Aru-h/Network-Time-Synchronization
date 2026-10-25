@@ -48,6 +48,10 @@ command -v iperf >/dev/null || echo "WARNING: iperf not installed (sudo apt inst
 echo "ryu-manager : $RYU"
 echo "python      : $PYBIN ($("$PYBIN" --version 2>&1))"
 export EVAL_RYU_MANAGER="$RYU"
-if [ "${EVAL_CHECK_ONLY:-0}" = "1" ]; then echo "check-only: environment OK"; exit 0; fi
+if [ "${EVAL_CHECK_ONLY:-0}" = "1" ]; then
+  # Read-only probe by the runner itself (OVS daemon, netem, datapath). It exits before touching results/,
+  # and we skip `mn -c` here because that cleans up /tmp state.
+  exec "$PYBIN" evaluation/ubuntu_runner/run_mininet_tests.py
+fi
 mn -c >/dev/null 2>&1 || true
 exec "$PYBIN" evaluation/ubuntu_runner/run_mininet_tests.py

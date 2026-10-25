@@ -240,13 +240,21 @@ def write_summary(env_lines):
     return text
 
 
-def main():
+def check_environment():
+    """Probe the environment. Read-only: writes nothing under OUT. Exits with a message on failure.
+    Returns (ryu_cmd, shaped_delay, dp, iperf, env_lines)."""
+    if os.geteuid() != 0:
+        sys.exit('ERROR: must run as root (use sudo; the launcher does this)')
     ryu_cmd = os.environ.get('EVAL_RYU_MANAGER') or shutil.which('ryu-manager')
-    if not ryu_cmd:
-        sys.exit('ERROR: ryu-manager not found (set EVAL_RYU_MANAGER=/path/to/ryu-manager)')
-    if OUT.exists():
-        shutil.rmtree(OUT)          # results folder is regenerated on every run (CSV writer appends)
-    OUT.mkdir(parents=True)
+    if not ryu_cmd or not os.access(ryu_cmd, os.X_OK):
+        sys.exit('ERROR: ryu-manager not found or not executable '
+                 f'({ryu_cmd or "not on PATH"}); set EVAL_RYU_MANAGER=/path/to/ryu-manager')
+    missing = [t for t in ('ovs-vsctl', 'ovs-ofctl', 'tc', 'ip') if not shutil.which(t)]
+    if missing:
+        sys.exit('ERROR: required tool(s) not found: ' + ', '.join(missing))
+    rc, out = run('ovs-vsctl --timeout=5 show')
+    if rc != 0:
+        sys.exit('ERROR: Open vSwitch daemon not reachable (ovs-vsctl show failed):\n' + out.strip())
 
     shaped_delay = netem_available()
     dp = 'kernel' if kernel_datapath_available() else 'user'
@@ -257,6 +265,21 @@ def main():
                  f'bottleneck_mbps(h1 link)={BOTTLENECK_MBPS}', f'edge_mbps(h2,h3,h4 links)={EDGE_MBPS}',
                  f'under_load_mbps={UNDER_LOAD_MBPS}', f'over_load_mbps={OVER_LOAD_MBPS}',
                  f'python={sys.version.split()[0]}', f'ryu_manager={ryu_cmd}']
+    return ryu_cmd, shaped_delay, dp, iperf, env_lines
+
+
+def main():
+    # 1. All environment checks first. Nothing under OUT is touched until they have passed.
+    ryu_cmd, shaped_delay, dp, iperf, env_lines = check_environment()
+    if os.environ.get('EVAL_CHECK_ONLY') == '1':
+        print('\n'.join(env_lines))
+        print(f'check-only: environment OK; {OUT} was not touched')
+        return
+
+    # 2. Only now replace the previous results (the CSV writer appends, so the folder is regenerated each run).
+    if OUT.exists():
+        shutil.rmtree(OUT)
+    OUT.mkdir(parents=True)
     (OUT/'environment.txt').write_text('\n'.join(env_lines)+'\n')
     info('*** '+'; '.join(env_lines[:4])+'\n')
 

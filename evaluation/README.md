@@ -44,10 +44,12 @@ sudo ./evaluation/ubuntu_runner/run_evaluation.sh
 ```
 The launcher finds `ryu-manager` and a Python with Mininet even though sudo resets PATH (it looks at PATH,
 `~/topic23-venv`, pyenv). Check the environment first, without running anything:
-`sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh`. Overrides: `EVAL_RYU_MANAGER`, `EVAL_PYTHON`.
+`sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh` (checks ryu-manager, OVS tools and daemon, netem and
+datapath; it never touches `results/`). Overrides: `EVAL_RYU_MANAGER`, `EVAL_PYTHON`.
 It needs `iperf` (`sudo apt install -y iperf`; without it a weaker Python generator is used and the run says so).
 The run takes a few minutes (P5 alone waits ~40 s for its timeouts) and rewrites `results/actual_sdn_results/`
-(the previous contents of that folder are replaced).
+(the previous contents of that folder are replaced, but only after all environment checks have passed; a failed check leaves
+the old results in place).
 
 ## Layout
 | Path | What |
