@@ -1,0 +1,14 @@
+
+=== TRACK C ROBUSTNESS EVALUATION ===
+Test              : load
+Server            : 10.0.0.1:5000
+Samples requested : 20
+Successful        : 20
+Timeout/errors    : 0
+Average RTT (ms)  : 0.320
+Average offset(ms): -100.007
+Mean abs error(ms): 0.052
+Min/Max RTT (ms)  : 0.165 / 0.946
+CSV results       : /home/claude/network-time-synchronization/track_c/results/actual_sdn_results/P3_load.csv
+====================================
+

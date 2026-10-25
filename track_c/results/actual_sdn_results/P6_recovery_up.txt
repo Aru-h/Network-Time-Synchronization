@@ -1,0 +1,14 @@
+
+=== TRACK C ROBUSTNESS EVALUATION ===
+Test              : recovery
+Server            : 10.0.0.1:5000
+Samples requested : 20
+Successful        : 20
+Timeout/errors    : 0
+Average RTT (ms)  : 0.598
+Average offset(ms): -99.850
+Mean abs error(ms): 0.150
+Min/Max RTT (ms)  : 0.421 / 0.814
+CSV results       : /home/claude/network-time-synchronization/track_c/results/actual_sdn_results/P6_recovery_up.csv
+====================================
+

@@ -1,0 +1,5 @@
+Test,Condition,Delay,Skew,Samples,Average_RTT_ms,Average_Offset_ms,Mean_Abs_Error_ms,Timeouts
+P1,Baseline / normal,0,100,20,0.399,-99.924,0.093,0
+P2,50 ms controlled delay,≈50,100,20,51.161,-99.801,0.245,0
+P3,Background UDP load,0,100,20,0.813,-99.764,0.310,0
+P4,Load + controlled delay,≈50,100,20,61.322,-102.376,4.962,0

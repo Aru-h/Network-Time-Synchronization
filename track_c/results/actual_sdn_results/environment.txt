@@ -1,0 +1,2 @@
+netem_available=False
+ovs_datapath=user

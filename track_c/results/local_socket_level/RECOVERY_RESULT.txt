@@ -1,0 +1,3 @@
+Recovery test: server stopped -> 0/5 successful, 5/5 timeouts.
+Recovery test: server restarted -> 5/5 successful, 0/5 timeouts.
+Restarted-server average RTT: 0.471 ms; average offset: -99.842 ms; mean absolute error: 0.158 ms.

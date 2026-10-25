@@ -1,0 +1,6 @@
+P1_baseline      PASS                                           successful_samples=20
+P2_delay         SKIPPED (no netem)                             successful_samples=0
+P3_load          PASS                                           successful_samples=20
+P4_load_delay    PASS (load only - delay skipped, no netem)     successful_samples=20
+P5_recovery_down PASS                                           successful_samples=0
+P6_recovery_up   PASS                                           successful_samples=20
