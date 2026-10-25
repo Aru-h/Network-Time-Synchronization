@@ -7,12 +7,12 @@ Ryu 4.34 needs an older Python/eventlet than the newest Pythons (e.g. Python 3.1
 eventlet). The launcher looks for ryu-manager on PATH, then in ~/topic23-venv and ~/.pyenv/versions/*/bin.
 
 Check the environment (no test is run):
-  sudo env TRACKC_CHECK_ONLY=1 ./track_c/ubuntu_runner/run_track_c_mininet.sh
+  sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh
 
 Run, from the repository root:
-  sudo ./track_c/ubuntu_runner/run_track_c_mininet.sh
+  sudo ./evaluation/ubuntu_runner/run_evaluation.sh
 
-Results: track_c/results/actual_sdn_results/ (SUMMARY.txt first). The folder is wiped and rewritten each run.
+Results: evaluation/results/actual_sdn_results/ (SUMMARY.txt first). The folder is wiped and rewritten each run.
 
 Notes
 - netem (kernel module sch_netem) is needed for P2 and P4. Without it they are reported SKIPPED, never PASS.
@@ -20,4 +20,4 @@ Notes
   checksum offload on the hosts automatically.
 - Without iperf the runner uses the Python load generator, which may not reach the target rate; the congestion
   check then reports "NO CONGESTION ACHIEVED" instead of passing.
-- Do not use the old interactive d2_topology.py for Track C: its links are not shaped, so there is no bottleneck.
+- Do not use the old interactive d2_topology.py for the evaluation: its links are not shaped, so there is no bottleneck.

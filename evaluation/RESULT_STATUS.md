@@ -1,9 +1,9 @@
-# Track C result status
+# Evaluation result status
 
 Two independent result sets exist. They are **different experiments**; do not mix them in the report.
 
 ## A. `results/actual_sdn_results/` - Mininet + Ryu + Open vSwitch (OpenFlow 1.3)
-Produced by `ubuntu_runner/run_track_c_mininet.sh`.
+Produced by `ubuntu_runner/run_evaluation.sh`.
 
 **Where it was produced: a sandbox, NOT the target Ubuntu VM.** Environment (`environment.txt`):
 OVS 3.3.9 **userspace datapath** (no OVS kernel module), **no `netem`**, Python 3.13, iperf 2 load tool,
@@ -63,8 +63,8 @@ The "x baseline" ratio is noisy because the baseline is sub-millisecond (63x in 
 - Numbers in the PDF are from set B, not from this set.
 
 ## B. `results/local_socket_level/` and the PDF report - plain sockets, no SDN
-Measurements of the Track A server + Track C evaluator over loopback with a UDP delay proxy (P2/P4 ~50 ms RTT) and
+Measurements of the Track A server + evaluator over loopback with a UDP delay proxy (P2/P4 ~50 ms RTT) and
 background UDP load against the server socket. Mininet/OVS/Ryu were not involved and no bottleneck was verified. The PDF
-`Track_C_Final_Report_With_Executed_Results.pdf` reports this set and says so on its first page.
+`Evaluation_Report_Loopback_Results.pdf` reports this set and says so on its first page.
 
 No numbers in either set are fabricated or estimated; every value comes from a run.

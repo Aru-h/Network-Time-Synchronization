@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-command Track C Mininet/SDN execution (Ryu + Mininet + Open vSwitch).
+"""One-command evaluation Mininet/SDN execution (Ryu + Mininet + Open vSwitch).
 
 Topology: s1 with h1 (time server), h2 (sync client), h3 (spare), h4 (background load).
 Every link is shaped with TCLink so a real bottleneck exists whether or not netem is available:
@@ -20,7 +20,7 @@ Tests
 A loaded test is only labelled "CONGESTION ACHIEVED" if its average RTT is >= 2x the matching
 unloaded baseline AND at least +1 ms above it; otherwise it is "NO CONGESTION ACHIEVED".
 Exit status is non-zero if any test FAILED, did not reach its test condition, or was inconclusive.
-Results go to track_c/results/actual_sdn_results/.
+Results go to evaluation/results/actual_sdn_results/.
 """
 import csv, gzip, os, re, shutil, signal, statistics, subprocess, sys, time
 from functools import partial
@@ -32,10 +32,10 @@ from mininet.link import TCLink
 from mininet.log import setLogLevel, info
 
 ROOT = Path(__file__).resolve().parents[2]   # repo root
-OUT = ROOT/'track_c'/'results'/'actual_sdn_results'
+OUT = ROOT/'evaluation'/'results'/'actual_sdn_results'
 RYU_APP = ROOT/'controller'/'d2_adaptive_controller.py'
 SERVER = ROOT/'server_client'/'time_server.py'
-EVAL = ROOT/'track_c'/'code'/'track_c_robustness_eval.py'
+EVAL = ROOT/'evaluation'/'code'/'robustness_eval.py'
 LOADGEN = ROOT/'server_client'/'load_generator.py'   # fallback only, when iperf is missing
 PY = sys.executable                                    # stdlib-only scripts run with this
 
@@ -241,9 +241,9 @@ def write_summary(env_lines):
 
 
 def main():
-    ryu_cmd = os.environ.get('TRACKC_RYU_MANAGER') or shutil.which('ryu-manager')
+    ryu_cmd = os.environ.get('EVAL_RYU_MANAGER') or shutil.which('ryu-manager')
     if not ryu_cmd:
-        sys.exit('ERROR: ryu-manager not found (set TRACKC_RYU_MANAGER=/path/to/ryu-manager)')
+        sys.exit('ERROR: ryu-manager not found (set EVAL_RYU_MANAGER=/path/to/ryu-manager)')
     if OUT.exists():
         shutil.rmtree(OUT)          # results folder is regenerated on every run (CSV writer appends)
     OUT.mkdir(parents=True)

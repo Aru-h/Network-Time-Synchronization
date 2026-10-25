@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Track C - Robustness & Performance Evaluation
+Evaluation - Robustness & Performance
 Topic 23: Network Time Synchronization System
 
-This is the Track C layer. It does NOT replace Track A's time server or
+This is the evaluation layer. It does NOT replace Track A's time server or
 Track B's SDN controller. It evaluates the existing system by generating
 repeatable synchronization measurements and writing CSV results.
 
@@ -101,7 +101,7 @@ def run(args):
     offsets = [float(r["offset_ms"]) for r in ok]
     errors = [float(r["abs_error_ms"]) for r in ok]
 
-    print("\n=== TRACK C ROBUSTNESS EVALUATION ===")
+    print("\n=== ROBUSTNESS EVALUATION ===")
     print(f"Test              : {args.test}")
     print(f"Server            : {args.server}:{args.port}")
     print(f"Samples requested : {args.samples}")
@@ -119,7 +119,7 @@ def run(args):
 
 
 def main():
-    p = argparse.ArgumentParser(description="Track C robustness evaluator")
+    p = argparse.ArgumentParser(description="Robustness evaluator")
     p.add_argument("--test", required=True,
                    choices=["baseline", "delay", "load", "load_delay", "recovery"])
     p.add_argument("--server", required=True)
@@ -128,7 +128,7 @@ def main():
     p.add_argument("--interval", type=float, default=0.2)
     p.add_argument("--timeout", type=float, default=2.0)
     p.add_argument("--skew-ms", type=float, default=100.0)
-    p.add_argument("--csv", default="results/track_c_results.csv")
+    p.add_argument("--csv", default="results/evaluation_results.csv")
     args = p.parse_args()
     run(args)
 

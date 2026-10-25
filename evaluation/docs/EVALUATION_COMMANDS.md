@@ -1,7 +1,7 @@
-# Track C — Exact Ubuntu/Mininet Commands
+# Evaluation — Exact Ubuntu/Mininet Commands
 
 > **Note:** this manual procedure uses the interactive `mininet/d2_topology.py`, whose links are **not shaped**, so
-> there is no bottleneck and the "load" steps will not create congestion. Use `ubuntu_runner/run_track_c_mininet.sh`
+> there is no bottleneck and the "load" steps will not create congestion. Use `ubuntu_runner/run_evaluation.sh`
 > for the congestion/robustness results; keep this file only for a step-by-step demo.
 
 
@@ -40,21 +40,21 @@ mininet> h1 python3 /ABSOLUTE/PATH/server_client/time_server.py --host 10.0.0.1 
 
 Leave it running.
 
-## Put Track C evaluator on the Mininet hosts
+## Put the evaluator on the Mininet hosts
 
-If the Track C file is stored in the project root:
+If the evaluator file is stored in the project root:
 
 ```text
-mininet> h2 cp /ABSOLUTE/PATH/track_c/code/track_c_robustness_eval.py /tmp/track_c_robustness_eval.py
-mininet> h3 cp /ABSOLUTE/PATH/track_c/code/track_c_robustness_eval.py /tmp/track_c_robustness_eval.py
+mininet> h2 cp /ABSOLUTE/PATH/evaluation/code/robustness_eval.py /tmp/robustness_eval.py
+mininet> h3 cp /ABSOLUTE/PATH/evaluation/code/robustness_eval.py /tmp/robustness_eval.py
 ```
 
-Then use `/tmp/track_c_robustness_eval.py` in the following commands.
+Then use `/tmp/robustness_eval.py` in the following commands.
 
 ## TEST 1 — Baseline
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test baseline --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/baseline.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/baseline.csv
 ```
 
 Record:
@@ -69,11 +69,11 @@ Record:
 Open two Mininet commands (or run one after the other):
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/client1.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/client1.csv
 ```
 
 ```text
-mininet> h3 python3 /tmp/track_c_robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms -50 --csv /tmp/client2.csv
+mininet> h3 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms -50 --csv /tmp/client2.csv
 ```
 
 ## TEST 3 — 50 ms network delay
@@ -87,7 +87,7 @@ mininet> h2 tc qdisc add dev h2-eth0 root netem delay 50ms
 Run:
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/delay.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/delay.csv
 ```
 
 Remove delay:
@@ -107,7 +107,7 @@ mininet> h4 python3 /ABSOLUTE/PATH/server_client/load_generator.py 10.0.0.1 --po
 While it runs, execute:
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test load --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test load --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load.csv
 ```
 
 Watch the Ryu terminal for messages such as:
@@ -135,7 +135,7 @@ mininet> h4 python3 /ABSOLUTE/PATH/server_client/load_generator.py 10.0.0.1 --po
 During the load:
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test load_delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load_delay.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test load_delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load_delay.csv
 ```
 
 Remove delay:
@@ -151,7 +151,7 @@ Stop the h1 server with Ctrl+C in its terminal.
 Then run:
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test recovery --server 10.0.0.1 --samples 5 --skew-ms 100 --csv /tmp/failure.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test recovery --server 10.0.0.1 --samples 5 --skew-ms 100 --csv /tmp/failure.csv
 ```
 
 You should see timeout/errors.
@@ -165,7 +165,7 @@ mininet> h1 python3 /ABSOLUTE/PATH/server_client/time_server.py --host 10.0.0.1 
 Then run again:
 
 ```text
-mininet> h2 python3 /tmp/track_c_robustness_eval.py --test recovery --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/recovery.csv
+mininet> h2 python3 /tmp/robustness_eval.py --test recovery --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/recovery.csv
 ```
 
 You should see successful synchronization.
@@ -194,9 +194,9 @@ sudo mn -c
 
 ## What to submit
 
-For Track C, keep:
-1. `track_c_robustness_eval.py`
-2. Track C PDF
+For the evaluation, keep:
+1. `robustness_eval.py`
+2. the evaluation PDF
 3. actual result CSVs/screenshots
 4. the commands/results used in the demo
 

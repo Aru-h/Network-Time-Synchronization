@@ -1,4 +1,4 @@
-# Track C - Robustness & Performance Evaluation
+# Evaluation - Robustness & Performance
 
 Evaluates the Track A time-sync system (UDP, four-timestamp RTT/offset) over the Track B dynamic SDN controller
 under: baseline, +50 ms delay, load below and above link capacity, load + delay, and server failure/recovery.
@@ -26,20 +26,20 @@ traffic (same output port, same FIFO, no set-queue/meter/DSCP).
 
 ## Run (on the Ubuntu VM, from the repository root)
 ```
-sudo ./track_c/ubuntu_runner/run_track_c_mininet.sh
+sudo ./evaluation/ubuntu_runner/run_evaluation.sh
 ```
 The launcher finds `ryu-manager` and a Python with Mininet even though sudo resets PATH (it looks at PATH,
 `~/topic23-venv`, pyenv). Check the environment first, without running anything:
-`sudo env TRACKC_CHECK_ONLY=1 ./track_c/ubuntu_runner/run_track_c_mininet.sh`. Overrides: `TRACKC_RYU_MANAGER`, `TRACKC_PYTHON`.
+`sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh`. Overrides: `EVAL_RYU_MANAGER`, `EVAL_PYTHON`.
 It needs `iperf` (`sudo apt install -y iperf`; without it a weaker Python generator is used and the run says so).
 The run takes a few minutes (P5 alone waits ~40 s for its timeouts) and wipes and rewrites `results/actual_sdn_results/`.
 
 ## Layout
 | Path | What |
 |---|---|
-| `code/track_c_robustness_eval.py` | Client-side evaluator: RTT, offset, abs. error, timeouts -> CSV |
-| `ubuntu_runner/run_track_c_mininet.sh` | Launcher (environment discovery, then the runner) |
-| `ubuntu_runner/track_c_mininet_automated.py` | The runner |
+| `code/robustness_eval.py` | Client-side evaluator: RTT, offset, abs. error, timeouts -> CSV |
+| `ubuntu_runner/run_evaluation.sh` | Launcher (environment discovery, then the runner) |
+| `ubuntu_runner/run_mininet_tests.py` | The runner |
 | `results/actual_sdn_results/` | `SUMMARY.txt`, per-test CSV/TXT, `evidence_*_during_load.txt` (flows, port counters, `tc -s` of the bottleneck), `policy_*.txt`, `iperf_server.log`s, Ryu log, `environment.txt` |
 | `results/local_socket_level/` + the PDF | Earlier plain-socket results (no SDN) |
 | `docs/` | Manual Mininet commands (no bottleneck: plain interactive topology), install notes |
