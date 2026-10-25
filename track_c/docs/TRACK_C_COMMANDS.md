@@ -1,5 +1,10 @@
 # Track C — Exact Ubuntu/Mininet Commands
 
+> **Note:** this manual procedure uses the interactive `mininet/d2_topology.py`, whose links are **not shaped**, so
+> there is no bottleneck and the "load" steps will not create congestion. Use `ubuntu_runner/run_track_c_mininet.sh`
+> for the congestion/robustness results; keep this file only for a step-by-step demo.
+
+
 ## Terminal 1 — Ryu Track B controller
 
 From the repository root:
