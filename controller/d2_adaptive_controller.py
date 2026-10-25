@@ -170,6 +170,16 @@ class AdaptiveTimeSyncController(app_manager.RyuApp):
             self.logger.info(
                 "BACKGROUND TRAFFIC: %s -> %s UDP/%s", ip.src, ip.dst,
                 udp_pkt.dst_port)
+            if out_port != ofp.OFPP_FLOOD:
+                # Forward in the data plane at NORMAL priority. Without a flow
+                # every background packet is a packet-in handled by the
+                # controller (table-miss), so it never competes with sync
+                # traffic on the switch's egress queue.
+                match = parser.OFPMatch(
+                    in_port=in_port, eth_type=ether_types.ETH_TYPE_IP,
+                    ip_proto=17, ipv4_dst=ip.dst, udp_dst=LOAD_PORT)
+                self.add_flow(dp, NORMAL_PRIORITY, match, actions,
+                              idle_timeout=30)
         elif out_port != ofp.OFPP_FLOOD:
             match = parser.OFPMatch(in_port=in_port, eth_dst=eth.dst)
             self.add_flow(dp, NORMAL_PRIORITY, match, actions, idle_timeout=30)
