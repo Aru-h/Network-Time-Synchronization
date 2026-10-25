@@ -196,8 +196,7 @@ sudo mn -c
 
 For the evaluation, keep:
 1. `robustness_eval.py`
-2. the evaluation PDF
-3. actual result CSVs/screenshots
-4. the commands/results used in the demo
+2. actual result CSVs/screenshots
+3. the commands/results used in the demo
 
 Do not invent performance values. Fill the final report from the actual output.

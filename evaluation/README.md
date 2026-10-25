@@ -58,6 +58,6 @@ the old results in place).
 | `ubuntu_runner/run_evaluation.sh` | Launcher (environment discovery, then the runner) |
 | `ubuntu_runner/run_mininet_tests.py` | The runner |
 | `results/actual_sdn_results/` | Ubuntu VM run: `SUMMARY.txt`, per-test CSV/TXT, `evidence_*_during_load.txt` (flows, port counters, `tc -s` of the bottleneck), `policy_*.txt`, iperf server/client logs, Ryu log, `environment.txt` |
-| `results/local_socket_level/` + the PDF | Earlier plain-socket results (no SDN), a different experiment |
+| `results/local_socket_level/` | Earlier plain-socket (loopback) results, no SDN: a different experiment |
 | `docs/` | Manual Mininet commands (no bottleneck: plain interactive topology), install notes |
 | `RESULT_STATUS.md` | What the results show, what they do not, what was not verified |

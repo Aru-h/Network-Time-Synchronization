@@ -5,7 +5,7 @@ Three result sets exist. They are **different experiments**; do not mix them in 
 | Set | Folder | Environment | Status |
 |---|---|---|---|
 | A (primary) | `results/actual_sdn_results/` | Ubuntu VM: Mininet + Ryu + **kernel** Open vSwitch 3.7.1, netem available | the results to report |
-| B | `results/local_socket_level/` + the PDF | plain sockets over loopback, no SDN | different experiment |
+| B | `results/local_socket_level/` | earlier plain-socket (loopback) results, no SDN | different experiment |
 | C | not committed | earlier sandbox run (see "Earlier sandbox run" below) | superseded, kept only as a note |
 
 Everything below is a value read from the committed files. Where something could not be verified, it says so.
@@ -115,10 +115,10 @@ the 2x rule was not met".
 - The cause of the P1 first-sample outlier.
 - Only one run of the VM set is committed; run-to-run variation on the VM is unknown.
 
-## B. `results/local_socket_level/` and the PDF report - plain sockets, no SDN
+## B. `results/local_socket_level/` - earlier plain-socket (loopback) results, no SDN
 Measurements of the Track A server + evaluator over loopback with a UDP delay proxy (P2/P4 ~50 ms RTT) and
-background UDP load against the server socket. Mininet/OVS/Ryu were not involved and no bottleneck was verified. The PDF
-`Evaluation_Report_Loopback_Results.pdf` reports this set and says so on its first page. Its numbers are not from set A.
+background UDP load against the server socket. Mininet/OVS/Ryu were not involved and no bottleneck was verified. This is a
+different experiment from set A, and its numbers must not be mixed with set A's.
 
 ## Earlier sandbox run (not committed, superseded by A)
 A first end-to-end run was made in a different environment: OVS 3.3.9 **userspace** datapath, **no netem**, Python 3.13.
