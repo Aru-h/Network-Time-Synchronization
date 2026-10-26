@@ -13,7 +13,7 @@ Everything below is a value read from the committed files. Where something could
 ## A. `results/actual_sdn_results/` - Ubuntu VM run
 
 Environment (`environment.txt`): kernel OVS datapath, `ovs-vsctl` 3.7.1, netem available, `iperf` as load tool,
-Python 3.14.4, h1 link = 20 Mbps (the bottleneck), h2/h3/h4 links = 100 Mbps. The iperf version on the VM was not recorded.
+Python 3.14.4, h1 link = 20 Mbps (the bottleneck), h2/h3/h4 links = 100 Mbps. The iperf package on the VM is `2.2.1+dfsg-1build1` (from `apt` output on the VM; `iperf --version` itself was not captured).
 
 Note on the links: this run used Mininet's default htb `r2q` (10), which makes the kernel print
 `sch_htb: quantum of class 50001 is big` warnings (Mininet labels them "Error"; they are warnings). The runner has since
@@ -58,8 +58,9 @@ The queue is visible in `tc -s qdisc show dev s1-eth1` (the bottleneck egress) d
 **Why the sender stayed at about 19.5 Mbit/s instead of 30M: not verified.** The client log says
 `IPG target: 0.00 us`, but that banner is not diagnostic: it also appears in P3a, where the sender did reach its 10M target.
 Possible causes (sender blocked by the full bottleneck queue on its path, or iperf-version pacing behaviour) were
-not tested. Checking it needs `iperf --version` on the VM and a 30M run from h4 to a host that is not behind the
-bottleneck (e.g. h3). That run was not made.
+not tested. `evaluation/ubuntu_runner/diagnose_load_rate.py` runs 30M from h4 to h3 (no bottleneck on that path) and to h1,
+and prints the sender rate for each; that script has not been run on the VM yet. In a sandbox with iperf 2.1.9 it reached
+the requested rate in every case, so it does not reproduce the VM's 19.5 Mbit/s.
 
 ### Two different offset-error behaviours, and why
 Offset = ((T2-T1)+(T3-T4))/2 = true offset + (d1-d2)/2, where d1 is the one-way delay of the request (client -> server)
@@ -115,7 +116,8 @@ the 2x rule was not met".
   cause was not isolated.
 
 ### Not verified
-- Why the iperf sender reached only about 19.5 Mbit/s of a 30M request (see above); the VM's iperf version.
+- Why the iperf sender reached only about 19.5 Mbit/s of a 30M request (see above). `evaluation/ubuntu_runner/diagnose_load_rate.py`
+  is provided to test it on the VM; it has not been run there.
 - Whether sync traffic behaves differently without the priority-100 rule (no such run).
 - Why the policy log alternates `high`/`normal` in pairs.
 - The cause of the P1 first-sample outlier.

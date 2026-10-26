@@ -60,4 +60,5 @@ the old results in place).
 | `results/actual_sdn_results/` | Ubuntu VM run: `SUMMARY.txt`, per-test CSV/TXT, `evidence_*_during_load.txt` (flows, port counters, `tc -s` of the bottleneck), `policy_*.txt`, iperf server/client logs, Ryu log, `environment.txt` |
 | `results/local_socket_level/` | Earlier plain-socket (loopback) results, no SDN: a different experiment |
 | `docs/` | Manual Mininet commands (no bottleneck: plain interactive topology), install notes |
+| `ubuntu_runner/diagnose_load_rate.py` | Optional diagnostic for the iperf sender-rate question (`sudo mn -c; sudo python3 evaluation/ubuntu_runner/diagnose_load_rate.py`); prints and saves to `/tmp/diagnose_load_rate.txt`, writes nothing under `results/` |
 | `RESULT_STATUS.md` | What the results show, what they do not, what was not verified |
