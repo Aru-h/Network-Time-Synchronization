@@ -28,7 +28,7 @@ from pathlib import Path
 from mininet.net import Mininet
 from mininet.node import RemoteController, OVSSwitch
 from mininet.topo import Topo
-from mininet.link import TCLink
+from mininet.link import TCLink, TCIntf
 from mininet.log import setLogLevel, info
 
 ROOT = Path(__file__).resolve().parents[2]   # repo root
@@ -55,13 +55,32 @@ RESULTS = []                  # dicts: name, status, ok, total, rtt, ratio, loss
 STATS = {}
 
 
+HTB_R2Q = 100   # Mininet's default (r2q 10) makes the kernel warn "quantum of class 50001 is big" at 20/100 Mbit.
+                # quantum = rate / r2q must lie in [1000, 200000] bytes: r2q 100 gives 25,000 B (20 Mbit) and
+                # 125,000 B (100 Mbit). Each interface has one htb class, so this changes no shaped rate.
+
+
+class ShapedIntf(TCIntf):
+    """TCIntf whose htb root qdisc is created with an explicit r2q (silences the quantum warning)."""
+    def bwCmds(self, *args, **kwargs):
+        cmds, parent = super().bwCmds(*args, **kwargs)
+        return [c.replace('htb default 1', f'htb default 1 r2q {HTB_R2Q}') for c in cmds], parent
+
+
+class ShapedLink(TCLink):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('cls1', ShapedIntf)
+        kwargs.setdefault('cls2', ShapedIntf)
+        super().__init__(*args, **kwargs)
+
+
 class TopoC(Topo):
     def build(self):
         s = self.addSwitch('s1', protocols='OpenFlow13')
         for i in range(1, 5):
             self.addHost(f'h{i}', ip=f'10.0.0.{i}/24')
         for i in range(1, 5):
-            self.addLink(f'h{i}', s, cls=TCLink, bw=BOTTLENECK_MBPS if i == 1 else EDGE_MBPS)
+            self.addLink(f'h{i}', s, cls=ShapedLink, bw=BOTTLENECK_MBPS if i == 1 else EDGE_MBPS)
 
 
 def run(cmd, log=None, timeout=None):
@@ -292,7 +311,7 @@ def main():
         ryu = subprocess.Popen([ryu_cmd, str(RYU_APP)], stdout=ryu_f, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
         time.sleep(4)
         net = Mininet(topo=TopoC(), switch=partial(OVSSwitch, datapath=dp), controller=None,
-                      autoSetMacs=True, autoStaticArp=True, link=TCLink)
+                      autoSetMacs=True, autoStaticArp=True, link=ShapedLink)
         net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6653)
         net.start(); time.sleep(3)
         h1, h2 = net['h1'], net['h2']

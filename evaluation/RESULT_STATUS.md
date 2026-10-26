@@ -15,6 +15,12 @@ Everything below is a value read from the committed files. Where something could
 Environment (`environment.txt`): kernel OVS datapath, `ovs-vsctl` 3.7.1, netem available, `iperf` as load tool,
 Python 3.14.4, h1 link = 20 Mbps (the bottleneck), h2/h3/h4 links = 100 Mbps. The iperf version on the VM was not recorded.
 
+Note on the links: this run used Mininet's default htb `r2q` (10), which makes the kernel print
+`sch_htb: quantum of class 50001 is big` warnings (Mininet labels them "Error"; they are warnings). The runner has since
+been changed to create the htb qdiscs with `r2q 100`, which removes the warnings. In a sandbox re-run the shaped behaviour
+(P3b RTT, load received, loss) matched the earlier sandbox run. The committed VM results were **not** re-run with this
+change; a second VM run (terminal output only, files not committed) was also made with the old setting.
+
 ### Per-test results (20 samples each, 20/20 returned unless stated)
 | Test | Runner verdict | avg RTT (ms) | mean abs offset error (ms) | Notes |
 |---|---|---|---|---|
