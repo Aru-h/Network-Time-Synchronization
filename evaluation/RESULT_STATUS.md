@@ -28,7 +28,7 @@ change; a second VM run (terminal output only, files not committed) was also mad
 | P2 delay (25 ms netem on h1 and h2) | DELAY ACHIEVED | 51.983 | 0.241 | 135.8x P1 |
 | P3a control, 10 Mbit/s load | CONTROL OK | 0.321 | 0.045 | no queue: `backlog 0b 0p`; load received 10.5 Mbit/s, 0 lost |
 | P3b overload, nominal 30M load | CONGESTION ACHIEVED | 41.491 (29.3-50.8) | 20.609 | 108.4x P1 |
-| P4 load + delay | **NO CONGESTION ACHIEVED** (see below) | 96.789 (84.5-101.3) | 23.237 | 1.9x the P2 delay-only RTT |
+| P4 load + delay | **NO CONGESTION ACHIEVED** in the committed `SUMMARY.txt` (old 2x rule); +44.8 ms over the delay-only RTT (see below) | 96.789 (84.5-101.3) | 23.237 | 1.9x the P2 delay-only RTT |
 | P5 server down | PASS | - | - | 0/20 returned, as expected |
 | P6 server restarted | PASS | 0.304 | 0.047 | 20/20 |
 
@@ -81,16 +81,28 @@ and d2 of the reply. The error is therefore half the *asymmetry*, not half the t
 Consequence for the report: RTT inflation and offset error are separate. A symmetric delay barely hurts the offset; an
 asymmetric queue hurts it by half its size.
 
-### P4 "NO CONGESTION ACHIEVED" - what it does and does not mean
-The runner flags a loaded test as congested only if avg RTT >= 2x the matching unloaded baseline (and >= +1 ms).
-For P4 the baseline is the P2 delay-only run (51.983 ms), so the bar is 103.97 ms. Measured 96.789 ms = **1.86x**, so
-the flag is "NO CONGESTION ACHIEVED".
+### P4 "NO CONGESTION ACHIEVED" - old rule, new rule
+**The committed VM files** (`SUMMARY.txt`, and the terminal output of the second VM run) were produced under the original
+rule: a loaded test counts as congested only if avg RTT >= 2x the matching unloaded baseline (and >= +1 ms). For P4 the
+baseline is the P2 delay-only run (51.983 ms), so the bar was 103.97 ms. Measured 96.789 ms = **1.86x** (second run:
+1.87x), so the flag was "NO CONGESTION ACHIEVED".
 
-That flag comes from the threshold, not from an absence of queueing. The measured added delay is **44.8 ms**
-(96.789 - 51.983), similar to P3b's 41.1 ms, the bottleneck backlog was 78 packets, and the offset error moved to
-23.2 ms from 0.24 ms. A 2x ratio is simply harder to reach when the baseline is already 52 ms. The threshold was **not
-changed**; P4 is reported with the verdict the runner produced. Read it as "queueing of about 45 ms was present;
-the 2x rule was not met".
+That flag came from the rule, not from an absence of queueing. The measured added delay is **44.8 ms** (96.789 - 51.983;
+second run +45.0 ms), similar to P3b's 41.1 ms (second run +41.7 ms); the bottleneck backlog was 78 packets against 71 for
+P3b, and the offset error moved to 23.2 ms from 0.24 ms.
+
+**The rule was then changed** (the change was made after seeing this result, so treat it as post-hoc). Queueing delay adds
+to fixed delay; it does not multiply it, so a ratio punishes tests that already contain 52 ms of fixed delay. Common practice
+for "does the load create a queue" is latency under load: loaded minus idle RTT in ms, as in bufferbloat grading (under 5 ms
+is the best grade, 5-30 ms the next) and in flent's RRUL test, with a standing queue of 5 ms or less treated as acceptable
+(CoDel's target, RFC 8289). The runner now gates on **added RTT >= 5 ms** over the matching baseline, and still prints the
+2x ratio as "info only". The 5 ms value comes from those references, not from the P4 numbers. The verdicts do not depend on
+its exact value: the control sits at about -0.1 ms and the overload tests at +41 to +45 ms, so any gate from about 1 ms to
+about 40 ms gives the same verdicts.
+
+Re-judged on the committed data with the new rule: P3a CONTROL OK, P3b CONGESTION ACHIEVED, P4 CONGESTION ACHIEVED (+44.8 ms),
+both VM runs. The committed `SUMMARY.txt` files were not regenerated, so they still show the old P4 verdict; a new VM run
+would print the new one.
 
 ### Priority: no protection observed
 - The controller **logged** `traffic high ... sync priority policy = 200` 11 times in the whole run

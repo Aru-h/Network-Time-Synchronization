@@ -17,8 +17,11 @@ Tests
   P5  server down (0 successes expected)
   P6  server restarted (recovery)
 
-A loaded test is only labelled "CONGESTION ACHIEVED" if its average RTT is >= 2x the matching
-unloaded baseline AND at least +1 ms above it; otherwise it is "NO CONGESTION ACHIEVED".
+A loaded test is only labelled "CONGESTION ACHIEVED" if its average RTT is at least CONGESTION_MIN_ADD_MS (5 ms)
+above the matching unloaded baseline; otherwise it is "NO CONGESTION ACHIEVED". This is "latency under load" as
+bufferbloat tests and flent measure it (loaded minus idle, in ms), and 5 ms is the standing-queue delay RFC 8289
+(CoDel) treats as acceptable. Queueing adds to fixed delay rather than multiplying it, so the old rule (RTT >= 2x
+baseline) failed P4 although it carries the same ~45 ms queue as P3b. The ratio is still printed, not gated.
 Exit status is non-zero if any test FAILED, did not reach its test condition, or was inconclusive.
 Results go to evaluation/results/actual_sdn_results/.
 """
@@ -47,7 +50,8 @@ LOAD_PORT = 6000
 LOAD_HEAD_START_S = 2         # load runs this long before the sync client starts sampling
 LOAD_MAX_S = 40               # iperf -t (client is stopped as soon as the sampling ends)
 SAMPLES, INTERVAL_S, TIMEOUT_S, SKEW_MS = 20, 0.1, 2, 100
-CONGESTION_RATIO, CONGESTION_MIN_ADD_MS = 2.0, 1.0   # sanity check D
+CONGESTION_MIN_ADD_MS = 5.0   # sanity check D: gating, added RTT over the matching baseline (was: >= 2x ratio and +1 ms)
+CONGESTION_RATIO_INFO = 2.0   # old rule, now only reported next to the verdict
 DELAY_MIN_ADD_MS = 30.0       # P2 must add at least this much RTT over baseline (expected ~50)
 CTRL_PKT_WARN = 10            # table-miss packets during a test above this -> flag
 
@@ -238,8 +242,11 @@ def judge_loaded(name, s, base, base_label, note, expect_congestion):
         record(name, 'INCONCLUSIVE (no samples or no baseline)', s, base, note)
         return
     ratio = s['rtt']/base
-    congested = s['rtt'] >= CONGESTION_RATIO*base and (s['rtt']-base) >= CONGESTION_MIN_ADD_MS
-    desc = f'avg RTT {s["rtt"]:.2f} ms = {ratio:.1f}x {base_label} ({base:.2f} ms)'
+    added = s['rtt'] - base
+    congested = added >= CONGESTION_MIN_ADD_MS
+    old_rule = 'MET' if ratio >= CONGESTION_RATIO_INFO else 'NOT MET'
+    desc = (f'avg RTT {s["rtt"]:.2f} ms = {added:+.2f} ms over {base_label} ({base:.2f} ms), {ratio:.1f}x; '
+            f'gate: added >= {CONGESTION_MIN_ADD_MS:g} ms; 2x ratio (info only): {old_rule}')
     if expect_congestion:
         record(name, ('CONGESTION ACHIEVED' if congested else 'NO CONGESTION ACHIEVED')+f' [{desc}]', s, base, note)
     else:

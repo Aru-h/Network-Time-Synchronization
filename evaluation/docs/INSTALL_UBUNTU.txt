@@ -19,5 +19,5 @@ Notes
 - If the Open vSwitch kernel module is missing the runner falls back to the userspace datapath and disables TX
   checksum offload on the hosts automatically.
 - Without iperf the runner uses the Python load generator, which may not reach the target rate; the congestion
-  check then reports "NO CONGESTION ACHIEVED" instead of passing.
+  check then reports "NO CONGESTION ACHIEVED" (added RTT below 5 ms) instead of passing.
 - Do not use the old interactive d2_topology.py for the evaluation: its links are not shaped, so there is no bottleneck.

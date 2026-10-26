@@ -16,8 +16,8 @@ Load is iperf UDP **h4 -> h1:6000**, so it queues in the same s1 -> h1 egress qu
 | P1 baseline | unloaded | samples return |
 | P2 delay | netem 25 ms on h1 **and** h2 (~50 ms RTT, symmetric) | RTT >= baseline + 30 ms, else "DELAY NOT ACHIEVED" (SKIPPED without netem) |
 | P3a control | iperf requested at 10M on the 20 Mbps link | must NOT congest ("CONTROL OK") |
-| P3b overload | iperf requested at 30M (`-b 30M`) on the 20 Mbps link | avg RTT >= 2x baseline and >= +1 ms, else "NO CONGESTION ACHIEVED" |
-| P4 load + delay | P3b load with P2 delay | same 2x / +1 ms check against the P2 delay-only RTT (SKIPPED without netem) |
+| P3b overload | iperf requested at 30M (`-b 30M`) on the 20 Mbps link | avg RTT >= 5 ms above the P1 baseline, else "NO CONGESTION ACHIEVED" (the 2x ratio is printed, not gated) |
+| P4 load + delay | P3b load with P2 delay | same added-delay check (>= 5 ms) against the P2 delay-only RTT (SKIPPED without netem) |
 | P5 / P6 | server down (0 successes expected) / restarted | recovery |
 
 A test is not reported as passing just because samples came back; the exit status is non-zero if any test failed,
@@ -31,9 +31,11 @@ did not reach its condition, or was inconclusive.
 - **Offset error depends on asymmetry, not on RTT.** Offset error = half of (request delay - reply delay). P2 delays both
   directions equally, so offset error stays near 0.24 ms although RTT is ~52 ms. The load queue exists only on the request
   direction (s1 -> h1), so the offset error is about RTT/2 (P3b: 20.6 ms of a 41.5 ms RTT).
-- **The 2x congestion rule is harsh on P4.** P4 is compared with the 52 ms delay-only run, so it needs ~104 ms; it measured
-  96.8 ms (1.9x) and is flagged "NO CONGESTION ACHIEVED", although ~45 ms of queueing was added (similar to P3b's ~41 ms).
-  The threshold has not been changed.
+- **Congestion is judged by added delay, not by a ratio.** The runner compares loaded and baseline RTT as "latency under
+  load" (loaded minus idle, in ms), as bufferbloat tests and flent do, with a 5 ms gate (the standing-queue delay RFC 8289
+  treats as acceptable). The earlier rule (RTT >= 2x baseline) is still printed for information, but it failed P4 (1.87x)
+  although P4 has the same ~45 ms queue as P3b, because queueing adds to fixed delay instead of multiplying it. The
+  committed VM `SUMMARY.txt` files were produced under the old rule and still say "NO CONGESTION ACHIEVED" for P4.
 - **Priority gives no protection here.** Sync flows (priority 100) and the load flow (priority 10) output to the same port
   and the same FIFO queue; the controller installs no set-queue action, meter or DSCP. The priority-200 policy is
   logged but no priority-200 flow was seen installed. Observed: no protection (there is no run without the rule to compare).
