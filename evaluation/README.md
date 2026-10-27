@@ -39,6 +39,9 @@ did not reach its condition, or was inconclusive.
 - **Priority gives no protection here.** Sync flows (priority 100) and the load flow (priority 10) output to the same port
   and the same FIFO queue; the controller installs no set-queue action, meter or DSCP. The priority-200 policy is
   logged but no priority-200 flow was seen installed in the committed VM runs (made before the D2 controller fixes `b437d0a`, `e116e38`; see RESULT_STATUS.md). Observed: no protection (there is no run without the rule to compare).
+  Re-run on 2026-10-27 with the fixed controller: the manual D2 demo (sync flows left idle 25 s, then load) did install
+  `priority=200` UDP/5000 flows (`idle_timeout=20`, seen in `dump-flows`). The runner still shows only priority-100 sync
+  flows, because its sync flows never expire before the load starts, and P3b still added +42.55 ms with the policy at 200.
 
 ## Run (on the Ubuntu VM, from the repository root)
 ```

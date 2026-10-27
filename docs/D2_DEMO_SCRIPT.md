@@ -16,7 +16,10 @@ Point to the Ryu terminal and explain:
 - controller receives port statistics
 - traffic crosses the threshold
 - synchronization policy changes
-- high-priority UDP/5000 flow is installed
+- high-priority UDP/5000 flow is installed (only when the sync flow is
+  (re)installed: leave the clients idle for more than 20 s before the load so
+  the priority-100 sync flows expire; a flow that is still alive keeps
+  priority 100)
 
 Then show:
 
@@ -36,5 +39,10 @@ Show the results table with actual measured numbers and explain the
 difference between normal, delay, load and load+delay conditions.
 
 ## 8. Final statement
-"Our D2 extends D1 with dynamic SDN monitoring and prioritization, challenging
-network conditions, recovery testing, and quantitative performance evaluation."
+"Our D2 extends D1 with dynamic SDN monitoring and a traffic-dependent
+flow-priority policy, challenging network conditions, recovery testing, and
+quantitative performance evaluation."
+
+Do not claim that the priority-200 policy reduces synchronization delay under
+congestion: sync and load traffic share one FIFO queue, and the measured P3b
+RTT still rose by about 42 ms.
