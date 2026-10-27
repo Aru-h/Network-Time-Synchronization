@@ -34,7 +34,6 @@ class AdaptiveTimeSyncController(app_manager.RyuApp):
         super().__init__(*args, **kwargs)
         self.mac_to_port = {}
         self.datapaths = {}
-        self.sync_keys = {}
         self.port_bytes = {}
         self.last_stats = {}
         self.monitor_thread = hub.spawn(self._monitor)
@@ -163,11 +162,12 @@ class AdaptiveTimeSyncController(app_manager.RyuApp):
         if is_sync:
             congested = sum(self.last_stats.values()) > 1_000_000
             if out_port != ofp.OFPP_FLOOD:
-                key = (dp.id, in_port, eth.dst, udp_pkt.dst_port == SYNC_PORT)
-                if self.sync_keys.get(key) != congested:
-                    self.install_sync_flow(
-                        dp, in_port, ip, udp_pkt, out_port, congested)
-                    self.sync_keys[key] = congested
+                # A packet-in means no flow matched, so (re)install every time.
+                # An "already installed" cache goes stale when the flow's idle
+                # timeout removes it, and then every sync packet stays on the
+                # slow controller path.
+                self.install_sync_flow(
+                    dp, in_port, ip, udp_pkt, out_port, congested)
             self.logger.info(
                 "SOCKET-SDN D2 EVENT: sync packet %s -> %s", ip.src, ip.dst)
         elif ip and udp_pkt and udp_pkt.dst_port == LOAD_PORT:
