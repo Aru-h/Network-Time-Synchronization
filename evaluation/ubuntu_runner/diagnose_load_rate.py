@@ -24,6 +24,7 @@ How to read it (no conclusion is drawn by the script):
 import os, re, shutil, subprocess, sys, time
 from pathlib import Path
 
+sys.dont_write_bytecode = True      # run as root: don't leave root-owned __pycache__ in the repo
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mininet.net import Mininet
 from mininet.node import OVSBridge

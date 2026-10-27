@@ -51,7 +51,9 @@ datapath; it never touches `results/`). Overrides: `EVAL_RYU_MANAGER`, `EVAL_PYT
 It needs `iperf` (`sudo apt install -y iperf`; without it a weaker Python generator is used and the run says so).
 The run takes a few minutes (P5 alone waits ~40 s for its timeouts) and rewrites `results/actual_sdn_results/`
 (the previous contents of that folder are replaced, but only after all environment checks have passed; a failed check leaves
-the old results in place).
+the old results in place). The runner needs root, so at exit it gives the results folder back to the user who ran `sudo`
+(so `git checkout`, `cp` and `rm` work without sudo). Runs made before this change left root-owned files; fix those once with
+`sudo chown -R $USER:$USER ~/Network-Time-Synchronization`.
 
 ## Layout
 | Path | What |

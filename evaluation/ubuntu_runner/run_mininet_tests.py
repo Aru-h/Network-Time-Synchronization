@@ -25,7 +25,7 @@ baseline) failed P4 although it carries the same ~45 ms queue as P3b. The ratio 
 Exit status is non-zero if any test FAILED, did not reach its test condition, or was inconclusive.
 Results go to evaluation/results/actual_sdn_results/.
 """
-import csv, gzip, os, re, shutil, signal, statistics, subprocess, sys, time
+import atexit, csv, gzip, os, re, shutil, signal, statistics, subprocess, sys, time
 from functools import partial
 from pathlib import Path
 from mininet.net import Mininet
@@ -266,6 +266,21 @@ def write_summary(env_lines):
     return text
 
 
+def hand_back_results():
+    """The runner runs as root (sudo), so everything it writes is root-owned and `git checkout`/`cp`/`rm` fail for the
+    normal user afterwards. Give the results folder back to the user who invoked sudo. Runs at exit, even after errors."""
+    uid, gid = os.environ.get('SUDO_UID'), os.environ.get('SUDO_GID')
+    if not (uid and gid) or not OUT.exists():
+        return
+    uid, gid = int(uid), int(gid)
+    for dirpath, _dirs, files in os.walk(OUT):
+        for path in [dirpath] + [os.path.join(dirpath, f) for f in files]:
+            try:
+                os.chown(path, uid, gid, follow_symlinks=False)
+            except OSError:
+                pass
+
+
 def check_environment():
     """Probe the environment. Read-only: writes nothing under OUT. Exits with a message on failure.
     Returns (ryu_cmd, shaped_delay, dp, iperf, env_lines)."""
@@ -306,6 +321,7 @@ def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
+    atexit.register(hand_back_results)
     (OUT/'environment.txt').write_text('\n'.join(env_lines)+'\n')
     info('*** '+'; '.join(env_lines[:4])+'\n')
 
