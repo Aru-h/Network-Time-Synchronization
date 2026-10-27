@@ -1,20 +1,20 @@
 P1_baseline      PASS
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.383  rtt_x_baseline=-  mean_abs_offset_err_ms=0.065
-P2_delay         DELAY ACHIEVED [avg RTT 51.98 ms vs baseline 0.38 ms]
-    samples_ok=20/20  loss%=0  avg_rtt_ms=51.983  rtt_x_baseline=135.8  mean_abs_offset_err_ms=0.241
-P3a_load_under   CONTROL OK - no congestion, as expected [avg RTT 0.32 ms = 0.8x P1 baseline (0.38 ms)]
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.321  rtt_x_baseline=0.8  mean_abs_offset_err_ms=0.045
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.111  rtt_x_baseline=-  mean_abs_offset_err_ms=0.015
+P2_delay         DELAY ACHIEVED [avg RTT 51.38 ms vs baseline 0.11 ms]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=51.379  rtt_x_baseline=464.4  mean_abs_offset_err_ms=0.207
+P3a_load_under   CONTROL OK - no congestion, as expected [avg RTT 0.03 ms = -0.08 ms over P1 baseline (0.11 ms), 0.2x; gate: added >= 5 ms; 2x ratio (info only): NOT MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.026  rtt_x_baseline=0.2  mean_abs_offset_err_ms=0.004
     load=10M offered, server_rx=10.5Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=4
-P3b_load_over    CONGESTION ACHIEVED [avg RTT 41.49 ms = 108.4x P1 baseline (0.38 ms)]
-    samples_ok=20/20  loss%=0  avg_rtt_ms=41.491  rtt_x_baseline=108.4  mean_abs_offset_err_ms=20.609
+P3b_load_over    CONGESTION ACHIEVED [avg RTT 42.66 ms = +42.55 ms over P1 baseline (0.11 ms), 385.6x; gate: added >= 5 ms; 2x ratio (info only): MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=42.661  rtt_x_baseline=385.6  mean_abs_offset_err_ms=21.285
     load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0
-P4_load_delay    NO CONGESTION ACHIEVED [avg RTT 96.79 ms = 1.9x P2 delay-only baseline (51.98 ms)]
-    samples_ok=20/20  loss%=0  avg_rtt_ms=96.789  rtt_x_baseline=1.9  mean_abs_offset_err_ms=23.237
-    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=1
+P4_load_delay    CONGESTION ACHIEVED [avg RTT 95.88 ms = +44.50 ms over P2 delay-only baseline (51.38 ms), 1.9x; gate: added >= 5 ms; 2x ratio (info only): NOT MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=95.876  rtt_x_baseline=1.9  mean_abs_offset_err_ms=22.895
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=3
 P5_recovery_down PASS
     samples_ok=0/20  loss%=100  avg_rtt_ms=-  rtt_x_baseline=-  mean_abs_offset_err_ms=-
 P6_recovery_up   PASS
-    samples_ok=20/20  loss%=0  avg_rtt_ms=0.304  rtt_x_baseline=-  mean_abs_offset_err_ms=0.047
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.027  rtt_x_baseline=-  mean_abs_offset_err_ms=0.005
 
 netem_available=True
 ovs_datapath=kernel

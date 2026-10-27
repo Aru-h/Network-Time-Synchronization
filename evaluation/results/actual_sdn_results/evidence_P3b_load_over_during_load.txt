@@ -1,30 +1,30 @@
 ### ovs-ofctl dump-flows s1
 OFPST_FLOW reply (OF1.3) (xid=0x2):
- cookie=0x0, duration=17.434s, table=0, n_packets=78, n_bytes=5269, idle_timeout=20, priority=100,udp,in_port=2,nw_dst=10.0.0.1,tp_dst=5000 actions=output:1
- cookie=0x0, duration=11.286s, table=0, n_packets=11488, n_bytes=17369856, idle_timeout=30, priority=10,udp,in_port=4,nw_dst=10.0.0.1,tp_dst=6000 actions=output:1
- cookie=0x0, duration=17.433s, table=0, n_packets=78, n_bytes=8389, idle_timeout=20, priority=100,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2,tp_src=5000 actions=output:2
- cookie=0x0, duration=7.204s, table=0, n_packets=0, n_bytes=0, idle_timeout=30, priority=10,in_port=1,dl_dst=00:00:00:00:00:04 actions=output:4
- cookie=0x0, duration=22.505s, table=0, n_packets=32, n_bytes=4200, priority=0 actions=CONTROLLER:65535
+ cookie=0x0, duration=17.285s, table=0, n_packets=79, n_bytes=5337, idle_timeout=20, priority=100,udp,in_port=2,nw_dst=10.0.0.1,tp_dst=5000 actions=output:1
+ cookie=0x0, duration=11.196s, table=0, n_packets=11488, n_bytes=17369856, idle_timeout=30, priority=10,udp,in_port=4,nw_dst=10.0.0.1,tp_dst=6000 actions=output:1
+ cookie=0x0, duration=17.284s, table=0, n_packets=78, n_bytes=8389, idle_timeout=20, priority=100,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2,tp_src=5000 actions=output:2
+ cookie=0x0, duration=7.156s, table=0, n_packets=0, n_bytes=0, idle_timeout=30, priority=10,in_port=1,dl_dst=00:00:00:00:00:04 actions=output:4
+ cookie=0x0, duration=22.333s, table=0, n_packets=32, n_bytes=4200, priority=0 actions=CONTROLLER:65535
 
 ### ovs-ofctl dump-ports s1
 OFPST_PORT reply (OF1.3) (xid=0x2): 5 ports
   port LOCAL: rx pkts=0, bytes=0, drop=0, errs=0, frame=0, over=0, crc=0
            tx pkts=0, bytes=0, drop=0, errs=0, coll=0
-           duration=22.521s
-  port  4: rx pkts=11799, bytes=17827266, drop=0, errs=0, frame=0, over=0, crc=0
+           duration=22.342s
+  port  4: rx pkts=11733, bytes=17727474, drop=0, errs=0, frame=0, over=0, crc=0
            tx pkts=44, bytes=4669, drop=0, errs=0, coll=0
-           duration=22.523s
+           duration=22.346s
   port  1: rx pkts=90, bytes=9560, drop=0, errs=0, frame=0, over=0, crc=0
-           tx pkts=11851, bytes=17742639, drop=0, errs=0, coll=0
-           duration=22.523s
+           tx pkts=11789, bytes=17648895, drop=0, errs=0, coll=0
+           duration=22.346s
   port  2: rx pkts=89, bytes=6190, drop=0, errs=0, frame=0, over=0, crc=0
            tx pkts=123, bytes=13103, drop=0, errs=0, coll=0
-           duration=22.523s
+           duration=22.346s
   port  3: rx pkts=9, bytes=786, drop=0, errs=0, frame=0, over=0, crc=0
            tx pkts=43, bytes=4499, drop=0, errs=0, coll=0
-           duration=22.523s
+           duration=22.346s
 
 ### tc -s qdisc show dev s1-eth1 (bottleneck egress toward h1)
-qdisc htb 5: root refcnt 3 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
- Sent 17745397 bytes 11850 pkt (dropped 0, overlimits 8098 requeues 0) 
- backlog 107352b 71p requeues 0
+qdisc htb 5: root refcnt 3 r2q 100 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 17650227 bytes 11788 pkt (dropped 0, overlimits 8082 requeues 0) 
+ backlog 86184b 57p requeues 0

@@ -1,14 +1,14 @@
 
-=== TRACK C ROBUSTNESS EVALUATION ===
+=== ROBUSTNESS EVALUATION ===
 Test              : load
 Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 41.491
-Average offset(ms): -79.391
-Mean abs error(ms): 20.609
-Min/Max RTT (ms)  : 29.291 / 50.833
-CSV results       : /home/seed/Network-Time-Synchronization/track_c/results/actual_sdn_results/P3b_load_over.csv
+Average RTT (ms)  : 42.661
+Average offset(ms): -78.715
+Mean abs error(ms): 21.285
+Min/Max RTT (ms)  : 33.025 / 55.990
+CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P3b_load_over.csv
 ====================================
 

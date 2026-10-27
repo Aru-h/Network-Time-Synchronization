@@ -1,14 +1,14 @@
 
-=== TRACK C ROBUSTNESS EVALUATION ===
+=== ROBUSTNESS EVALUATION ===
 Test              : baseline
 Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 0.383
-Average offset(ms): -99.935
-Mean abs error(ms): 0.065
-Min/Max RTT (ms)  : 0.101 / 1.524
-CSV results       : /home/seed/Network-Time-Synchronization/track_c/results/actual_sdn_results/P1_baseline.csv
+Average RTT (ms)  : 0.111
+Average offset(ms): -99.985
+Mean abs error(ms): 0.015
+Min/Max RTT (ms)  : 0.018 / 1.371
+CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P1_baseline.csv
 ====================================
 

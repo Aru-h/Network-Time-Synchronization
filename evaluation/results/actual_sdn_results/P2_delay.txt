@@ -1,14 +1,14 @@
 
-=== TRACK C ROBUSTNESS EVALUATION ===
+=== ROBUSTNESS EVALUATION ===
 Test              : delay
 Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 51.983
-Average offset(ms): -99.947
-Mean abs error(ms): 0.241
-Min/Max RTT (ms)  : 50.956 / 52.616
-CSV results       : /home/seed/Network-Time-Synchronization/track_c/results/actual_sdn_results/P2_delay.csv
+Average RTT (ms)  : 51.379
+Average offset(ms): -99.946
+Mean abs error(ms): 0.207
+Min/Max RTT (ms)  : 50.521 / 52.139
+CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P2_delay.csv
 ====================================
 

@@ -26,22 +26,23 @@ did not reach its condition, or was inconclusive.
 ### Things to know when reading the numbers
 - **Requested vs measured load.** `-b 30M` is the *requested* rate. In the committed VM run the iperf client log shows the
   sender actually sent about 19.5 Mbit/s (nominal 30M, measured ~19.5 Mbit/s): enough to saturate the 20 Mbps bottleneck
-  and build a queue, with no loss (0 of 8,179 datagrams in P3b). Report it as queueing delay, not packet loss. The cause
-  of the lower rate is not verified (see `RESULT_STATUS.md`).
+  and build a queue, with no loss (0 of 8,131 datagrams in P3b). Report it as queueing delay, not packet loss.
+  `diagnose_load_rate.py` shows the same iperf reaching 30M and 60M on paths without the bottleneck, so the cap comes from
+  the 20 Mbps path, not from iperf; the exact mechanism is not verified (see `RESULT_STATUS.md`).
 - **Offset error depends on asymmetry, not on RTT.** Offset error = half of (request delay - reply delay). P2 delays both
   directions equally, so offset error stays near 0.24 ms although RTT is ~52 ms. The load queue exists only on the request
-  direction (s1 -> h1), so the offset error is about RTT/2 (P3b: 20.6 ms of a 41.5 ms RTT).
+  direction (s1 -> h1), so the offset error is about RTT/2 (P3b: 21.3 ms of a 42.7 ms RTT).
 - **Congestion is judged by added delay, not by a ratio.** The runner compares loaded and baseline RTT as "latency under
   load" (loaded minus idle, in ms), as bufferbloat tests and flent do, with a 5 ms gate (the standing-queue delay RFC 8289
-  treats as acceptable). The earlier rule (RTT >= 2x baseline) is still printed for information, but it failed P4 (1.87x)
-  although P4 has the same ~45 ms queue as P3b, because queueing adds to fixed delay instead of multiplying it. The
-  committed VM `SUMMARY.txt` files were produced under the old rule and still say "NO CONGESTION ACHIEVED" for P4.
+  treats as acceptable). The earlier rule (RTT >= 2x baseline) is still printed for information, but it fails P4 (1.9x in the committed
+  run) although P4 has the same ~45 ms queue as P3b, because queueing adds to fixed delay instead of multiplying it. The
+  committed `SUMMARY.txt` (2026-10-27) uses the new rule and reports P4 as CONGESTION ACHIEVED (+44.50 ms).
 - **Priority gives no protection here.** Sync flows (priority 100) and the load flow (priority 10) output to the same port
   and the same FIFO queue; the controller installs no set-queue action, meter or DSCP. The priority-200 policy is
-  logged but no priority-200 flow was seen installed in the committed VM runs (made before the D2 controller fixes `b437d0a`, `e116e38`; see RESULT_STATUS.md). Observed: no protection (there is no run without the rule to compare).
-  Re-run on 2026-10-27 with the fixed controller: the manual D2 demo (sync flows left idle 25 s, then load) did install
-  `priority=200` UDP/5000 flows (`idle_timeout=20`, seen in `dump-flows`). The runner still shows only priority-100 sync
-  flows, because its sync flows never expire before the load starts, and P3b still added +42.55 ms with the policy at 200.
+  logged, but the committed run (2026-10-27, fixed D2 controller) installed only priority-100 sync flows, because the
+  runner's sync flows never expire before the load starts; P3b still added +42.55 ms with the policy at 200. A hand-run
+  D2 demo on the same day (sync flows left idle 25 s, then load) did install `priority=200` UDP/5000 flows. Observed: no
+  protection (there is no run without the rule to compare). See `RESULT_STATUS.md`.
 
 ## Run (on the Ubuntu VM, from the repository root)
 ```
