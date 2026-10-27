@@ -107,10 +107,12 @@ would print the new one.
 ### Priority: no protection observed
 - The controller **logged** `traffic high ... sync priority policy = 200` 11 times in the whole run
   (`policy_lines_all.txt`); 5 of them fall inside the test windows (P3a 1, P3b 2, P4 2; `policy_P3a/P3b/P4_*.txt`).
-  The log alternates a `high` reading with a ~0-byte `normal` reading (cause not investigated).
+  The log alternates a `high` reading with a ~0-byte `normal` reading. Cause found afterwards (see "D2 controller: two
+  bugs" below): the controller polled the switch twice per cycle, so every second reading is a ~0-byte delta.
 - **No flow with priority 200 appears in any evidence file** (`grep priority=200` over all `*.txt`: no match). The only
   sync flows the controller installed in the run are two priority-100 flows (`DYNAMIC SYNC FLOW` x2 in
-  `ryu_controller.log`). The "200" policy was logged but was not seen applied to the data plane.
+  `ryu_controller.log`). The "200" policy was logged but was not seen applied to the data plane. The two controller
+  bugs below explain why no 200 flow was installed in this run (they predate commits `b437d0a` and `e116e38`).
 - The sync flows (priority 100) and the load flow (priority 10) both have `actions=output:1`: same port, same
   htb FIFO queue; the controller uses no set-queue action, meter or DSCP. Priority only selects the flow-table entry;
   it does not reorder packets in the egress queue.
@@ -119,6 +121,30 @@ would print the new one.
   measured difference against a no-priority baseline. Real protection would need OVS queues plus a set-queue action.
 - The `high` threshold (1 MB per 2 s of rx+tx over all ports) also fired during the 10 Mbit/s control (P3a), which had
   no queue.
+
+### D2 controller: two bugs found from the D2 demo output, fixed afterwards
+Source: a terminal paste of a D2 demo on the VM (`d2_topology.py` + `d2_adaptive_controller.py`, hand-run clients; not
+committed as files), then reproduced in the sandbox (userspace OVS, no netem, so RTTs there are small; single runs).
+- **Stale "installed" cache.** The controller installed the two sync flows (`idle_timeout=20`) once and then skipped
+  reinstalling, because `sync_keys` still said "installed". After the idle timeout nothing brought the flows back, so every
+  later sync packet was a packet-in + packet-out. On the VM paste: the first client run (flows installed) averaged RTT
+  4.94 ms / error 0.09 ms; the second run (after an idle gap, flows gone) 8.12 ms / 0.60 ms; the `dump-flows` taken after the
+  load run showed no UDP/5000 flow at all. Sandbox: second run 3.26 ms vs 1.2 ms for the first. Fixed in `e116e38`
+  (reinstall on every sync packet-in, as the D1 controller does).
+- **Switch registered twice.** `state_change` ran while `dp.id` was still `None`, so the controller held the same datapath under
+  keys `None` and `1` and sent two port-stats requests per 2 s cycle (sandbox: two requests 1 ms apart, `datapaths keys=[None, 1]`).
+  The second reply's delta is ~0, which gives the `high`/`normal(0)` pairs, and `packet_in` read `last_stats` right after the
+  ~0 reading, so it almost always saw "not congested". Fixed in `b437d0a`. The VM was not instrumented; its log shows the same
+  pairs, which is consistent with this cause.
+- **After both fixes (sandbox only):** a sync flow that had expired, followed by load, is reinstalled at **priority 200**
+  (`DYNAMIC SYNC FLOW ... priority=200` in the log, `priority=200` in `dump-flows`). A flow that is still alive when the load
+  starts stays at 100, because no packet-in happens to upgrade it. These fixes make the policy accurate; they add **no
+  protection**: flow priority still does not reorder the egress queue.
+- **Runner pass with the fixed controller (sandbox, delay relay instead of netem, userspace OVS; not committed):** all
+  phases completed. The policy log no longer comes in pairs (76 readings: 44 `high`, 32 `normal`). Still only two
+  priority-100 sync flows and no `priority=200` in any dump, because the runner's sync flows never expire before the load
+  starts. The `priority=200` flow needs the expire-then-load order described above.
+- The committed VM runs (`results/actual_sdn_results/`) were made with the controller before these fixes.
 
 ### Controller and data plane
 - Background UDP/6000 is forwarded in the data plane by a priority-10 flow (`in_port=4 ... tp_dst=6000`, 11,488
@@ -131,7 +157,6 @@ would print the new one.
 - Why the iperf sender reached only about 19.5 Mbit/s of a 30M request (see above). `evaluation/ubuntu_runner/diagnose_load_rate.py`
   is provided to test it on the VM; it has not been run there.
 - Whether sync traffic behaves differently without the priority-100 rule (no such run).
-- Why the policy log alternates `high`/`normal` in pairs.
 - The cause of the P1 first-sample outlier.
 - Only one run of the VM set is committed; run-to-run variation on the VM is unknown.
 

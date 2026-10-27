@@ -38,7 +38,7 @@ did not reach its condition, or was inconclusive.
   committed VM `SUMMARY.txt` files were produced under the old rule and still say "NO CONGESTION ACHIEVED" for P4.
 - **Priority gives no protection here.** Sync flows (priority 100) and the load flow (priority 10) output to the same port
   and the same FIFO queue; the controller installs no set-queue action, meter or DSCP. The priority-200 policy is
-  logged but no priority-200 flow was seen installed. Observed: no protection (there is no run without the rule to compare).
+  logged but no priority-200 flow was seen installed in the committed VM runs (made before the D2 controller fixes `b437d0a`, `e116e38`; see RESULT_STATUS.md). Observed: no protection (there is no run without the rule to compare).
 
 ## Run (on the Ubuntu VM, from the repository root)
 ```
