@@ -65,6 +65,11 @@ class AdaptiveTimeSyncController(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, CONFIG_DISPATCHER])
     def state_change(self, ev):
         dp = ev.datapath
+        # During the handshake (CONFIG_DISPATCHER) dp.id is still None; storing
+        # it would register the same switch twice and make the monitor poll it
+        # twice per cycle (the second reply is a 0-byte delta).
+        if dp is None or dp.id is None:
+            return
         self.datapaths[dp.id] = dp
 
     def _monitor(self):
