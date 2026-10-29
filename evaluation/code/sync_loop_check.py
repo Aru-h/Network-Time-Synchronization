@@ -24,17 +24,34 @@ Legs (expected steps, role):
   S6_idle_cpubusy    idle leg with CPU-busy background processes     1 step   report only; optional (omitted if not run)
   S4_load_qosoff     load 30M, QoS off, skew 500 ms                  1 step   report only (error ~ RTT/2 sits on the bound)
   S5_load_qoson      load 30M, QoS on,  skew 500 ms                  1 step   PASS/FAIL, plus  S5 error < S4 error
+VALIDITY (a leg that fails it is reported INVALID, keeps its data, and is counted as SKIP, never PASS):
+  clock step  (wall clock - CLOCK_MONOTONIC) must not change by more than CLOCK_STEP_MS (5 ms) between two consecutive polls.
+              CLOCK_MONOTONIC is slewed like the wall clock, so the difference stays constant while chrony slews and changes only
+              when the wall clock is stepped or the machine is suspended and resumed (a laptop going to sleep under the VM,
+              which stepped the clock by 456 s in run 3). 5 ms is far above the noise of reading two clocks back to back and
+              far above what a step could do to the soft clock (rate x step is microseconds). Legs from runs that did not
+              record the column are "not measured", not INVALID.
+  load        (S4, S5) the iperf server must have received more than 0 Mbit/s in every second of the steady window, and the
+              sender must still have been running at the end of the leg. No threshold is introduced: the achieved mean and
+              minimum are printed so saturation can be read off. The steady window is the iperf-server seconds from one second
+              before the loop's steady half (the load starts LOAD_HEAD_START_S before the loop; the mapping is good to about
+              one second) to the last poll. A second missing from the server log counts as 0.
+  S5 < S4     is SKIP if either load leg is INVALID.
 Every leg: the clock never goes backwards (the `backwards` column stays 0; step instants are reported apart).
 Missing or too little data is SKIP, never PASS, and the table then says INCOMPLETE. Report-only legs are shown as INFO and are
 not counted. The exit status is 1 only for a FAIL.
 """
 import argparse
 import csv
+import re
 import sys
 from pathlib import Path
 
 POLL_S = 1.0
 WITHIN_FRACTION = 0.95      # fixed before run 3; see CRITERION HISTORY above
+CLOCK_STEP_MS = 5.0         # a leg is INVALID if (wall clock - CLOCK_MONOTONIC) changes by more than this between two polls
+LOAD_LEGS = ("S4_load_qosoff", "S5_load_qoson")
+LOAD_HEAD_START_S = 2       # the runner starts the load this many seconds before the loop (run_sync_loop.py: LOAD_HEAD_START_S)
 # name, description, drift ppm, expected steps, role
 LEGS = [
     ("S1_slew", "skew 100 ms, slew cap 5000 ppm (DEMO), 120 s", 0.0, 0, "PASS"),
@@ -61,7 +78,10 @@ def analyze(csv_path, drift_ppm, poll_s=POLL_S, min_steady=3):
     drift_ms = abs(drift_ppm) * 1e-6 * poll_s * 1e3
     errs = [abs(float(r["true_error"])) for r in steady]
     bounds = [float(r["filtered_rtt"]) / 2 + drift_ms for r in prev]
+    jumps = [float(r["clock_jump_ms"]) for r in allrows if r.get("clock_jump_ms") not in (None, "")]
     return dict(polls=len(allrows), ok=len(rows), steady=len(steady), timeouts=len(allrows) - len(rows),
+                t_steady_start=float(steady[0]["t"]), t_last=float(allrows[-1]["t"]),
+                clock_checked=bool(jumps), max_clock_jump=max((abs(j) for j in jumps), default=0.0),
                 steps=sum(int(r["stepped"]) for r in allrows),
                 step_at=[float(r["t"]) for r in allrows if int(r["stepped"])],
                 backwards=int(float(allrows[-1]["backwards"])) if allrows else 0,
@@ -73,6 +93,55 @@ def analyze(csv_path, drift_ppm, poll_s=POLL_S, min_steady=3):
                 within=sum(1 for e, b in zip(errs, bounds) if e <= b) / len(errs),
                 margin=min(b - e for e, b in zip(errs, bounds)),
                 max_rate=max(abs(float(r["rate_ppm"])) for r in allrows))
+
+
+def load_per_second(path):
+    """{start_second: Mbit/s} from the iperf server log, 1 s intervals only. Zero-rate intervals ('0.000 bits/sec') are kept:
+    the D2 runner's iperf_server_summary regex only matches 'Mbits/sec' lines, so it would drop them and average over the rest."""
+    out = {}
+    if not Path(path).exists():
+        return out
+    for line in Path(path).read_text().splitlines():
+        m = re.search(r"\]\s+(\d+\.\d+)\s*-\s*(\d+\.\d+)\s+sec\s+.*?(\d+\.?\d*)\s+([MKG]?)bits/sec", line)
+        if m and float(m.group(2)) - float(m.group(1)) <= 1.05:
+            out[int(float(m.group(1)))] = float(m.group(3)) * {"G": 1e3, "M": 1.0, "K": 1e-3, "": 1e-6}[m.group(4)]
+    return out
+
+
+def sender_running_at_end(txt_path):
+    """True/False from the runner's note 'still running at end of leg: ...', None if it is not there."""
+    p = Path(txt_path)
+    m = re.search(r"still running at end of leg: (True|False)", p.read_text()) if p.exists() else None
+    return None if m is None else m.group(1) == "True"
+
+
+def load_check(d, name, a):
+    """Load validity of one load leg from its iperf server log and runner note: dict(ok, mean, min, secs, alive, reason)."""
+    rates = load_per_second(Path(d) / f"{name}_iperf_server.log")
+    alive = sender_running_at_end(Path(d) / f"{name}.txt")
+    first = max(0, int(LOAD_HEAD_START_S + a["t_steady_start"]) - 1)
+    last = int(LOAD_HEAD_START_S + a["t_last"])
+    win = [rates.get(i, 0.0) for i in range(first, last + 1)]
+    reasons = []
+    if not rates:
+        reasons.append("no iperf server log")
+    if win and min(win) <= 0:
+        reasons.append(f"load was 0 Mbit/s in {sum(1 for x in win if x <= 0)} of {len(win)} steady seconds")
+    if alive is False:
+        reasons.append("the sender was no longer running at the end of the leg")
+    if alive is None:
+        reasons.append("no sender-status note")
+    return dict(ok=not reasons, mean=(sum(win) / len(win)) if win else 0.0, min=min(win) if win else 0.0,
+                secs=len(win), window=(first, last), alive=alive, reason="; ".join(reasons))
+
+
+def invalid_reasons(a, load):
+    r = []
+    if a["clock_checked"] and a["max_clock_jump"] > CLOCK_STEP_MS:
+        r.append(f"wall clock stepped against CLOCK_MONOTONIC by {a['max_clock_jump']:.1f} ms between polls (tolerance {CLOCK_STEP_MS:g} ms)")
+    if load is not None and not load["ok"]:
+        r.append(load["reason"])
+    return r
 
 
 def verdict(a, exp_steps, role, strict=False):
@@ -100,12 +169,28 @@ def evaluate(d, strict=False):
     for name, desc, drift, steps, role in LEGS:
         if name.startswith("S6") and not (d / f"{name}.csv").exists():
             continue                                                    # optional leg that was not run: omitted, not a SKIP
-        an[name] = analyze(d / f"{name}.csv", drift)
-        res, detail = verdict(an[name], steps, role, strict)
+        a = an[name] = analyze(d / f"{name}.csv", drift)
+        if a is not None and name in LOAD_LEGS:
+            a["load"] = load_check(d, name, a)
+        res, detail = verdict(a, steps, role, strict)
+        if a is not None:
+            bad = invalid_reasons(a, a.get("load"))
+            note = "" if a["clock_checked"] else "; clock-step check not recorded"
+            if name in LOAD_LEGS:
+                note += (f"; load in steady window {a['load']['mean']:.1f} Mbit/s mean, {a['load']['min']:.1f} min "
+                         f"({a['load']['secs']} s)")
+            if bad:
+                res, detail = "INVALID", "INVALID (counted SKIP): " + "; ".join(bad) + ". Data kept: " + detail
+            else:
+                detail += note
         out.append((name, res, f"{desc}: {detail}"))
     s4, s5 = an["S4_load_qosoff"], an["S5_load_qoson"]
+    inval = {n: r for n, r, _ in out if r == "INVALID"}
     if s4 is None or s5 is None:
         out.append(("S5 < S4 error", "SKIP", "no data for S4 or S5"))
+    elif "S4_load_qosoff" in inval or "S5_load_qoson" in inval:
+        out.append(("S5 < S4 error", "SKIP", "S4 INVALID" if "S4_load_qosoff" in inval and "S5_load_qoson" not in inval
+                    else "S5 INVALID" if "S5_load_qoson" in inval and "S4_load_qosoff" not in inval else "S4 and S5 INVALID"))
     else:
         ok = s5["mean_err"] < s4["mean_err"]
         out.append(("S5 < S4 error", "PASS" if ok else "FAIL",
@@ -129,8 +214,10 @@ def render(rows):
     lines = ["=" * 110, f"{'CHECK':<{w}}  RESULT  DETAIL", "-" * 110]
     for name, res, detail in rows:
         lines.append(f"{name:<{w}}  {res:<6}  {detail[:110 - w - 10]}")
-    n = {k: sum(1 for r in rows if r[1] == k) for k in ("PASS", "FAIL", "SKIP", "INFO")}
-    lines += ["-" * 110, f"PASS {n['PASS']}   FAIL {n['FAIL']}   SKIP {n['SKIP']}   (INFO {n['INFO']}: report-only legs, not counted)",
+    n = {k: sum(1 for r in rows if r[1] == k) for k in ("PASS", "FAIL", "SKIP", "INFO", "INVALID")}
+    n["SKIP"] += n["INVALID"]                                           # an INVALID leg is counted as SKIP, never PASS
+    lines += ["-" * 110, f"PASS {n['PASS']}   FAIL {n['FAIL']}   SKIP {n['SKIP']} (of which INVALID {n['INVALID']})   "
+              f"(INFO {n['INFO']}: report-only legs, not counted)",
               "OVERALL: " + ("FAIL" if n["FAIL"] else f"INCOMPLETE ({n['SKIP']} SKIP: no data)" if n["SKIP"] else "PASS"), "=" * 110]
     return "\n".join(lines), n
 

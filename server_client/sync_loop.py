@@ -21,9 +21,12 @@ separation: a large offset is a phase error being slewed out, not a frequency er
 so an old sample is corrected for drift as well as for the corrections applied since (off by default).
 
 CSV, one row per poll: t, offset_est, rtt, filtered_offset, correction, rate_ppm, true_error, stepped
-(ms except rate_ppm and t in s), plus status, filtered_rtt, backwards. true_error is only known because
+(ms except rate_ppm and t in s), plus status, filtered_rtt, backwards and clock_jump_ms. true_error is only known because
 Mininet hosts share one kernel clock (see softclock.py). `backwards` counts readings of the clock that
-went back for any reason other than a step; it must stay 0.
+went back for any reason other than a step; it must stay 0. `clock_jump_ms` is how much (wall clock - CLOCK_MONOTONIC)
+changed since the previous poll. CLOCK_MONOTONIC is slewed like the wall clock, so that difference stays constant while
+chrony slews and changes only when the wall clock is stepped or the machine is suspended and resumed (a laptop going to
+sleep under the VM). sync_loop_check.py marks a leg INVALID if any poll shows more than 5 ms.
 """
 import argparse
 import csv
@@ -39,7 +42,7 @@ from agefilter import AgeFilter, DEFAULT_PHI_PPM  # noqa: E402
 from softclock import SoftClock  # noqa: E402
 
 FIELDS = ["t", "status", "offset_est", "rtt", "filtered_offset", "filtered_rtt", "correction",
-          "rate_ppm", "true_error", "stepped", "backwards"]
+          "rate_ppm", "true_error", "stepped", "backwards", "clock_jump_ms"]
 TAU_POLLS = 4          # PI time constant: the offset is removed over about 4 polls; critically damped (ki = kp^2 / 4)
 INTEGRAL_BAND_MS = 2.0  # integral separation: accumulate only when |offset| is below this. A larger offset is a
                         # phase error being slewed out, not a frequency error; integrating it winds the integrator up
@@ -52,8 +55,9 @@ class SyncLoop:
     tests drive it with a fake clock and no sockets."""
 
     def __init__(self, clock, exchange, time_fn=time.time_ns, poll_s=1.0, step_ms=128.0,
-                 phi_ppm=DEFAULT_PHI_PPM, freq_compensate=False):
-        self.clock, self.exchange, self.time = clock, exchange, time_fn
+                 phi_ppm=DEFAULT_PHI_PPM, freq_compensate=False, mono_fn=time.monotonic_ns):
+        self.clock, self.exchange, self.time, self.mono = clock, exchange, time_fn, mono_fn
+        self._wall_minus_mono = None
         self.poll_s, self.step_ms, self.freq_compensate = poll_s, step_ms, freq_compensate
         self.filter = AgeFilter(phi_ppm=phi_ppm)
         self.kp = 1.0 / (TAU_POLLS * poll_s)              # 1/s
@@ -76,14 +80,23 @@ class SyncLoop:
         self._last_now, self._stepped = now, False
         return now
 
+    def _clock_jump_ms(self):
+        """Change of (wall - monotonic) since the previous poll; 0 on the first poll."""
+        d = self.time() - self.mono()
+        jump = 0.0 if self._wall_minus_mono is None else (d - self._wall_minus_mono) / 1e6
+        self._wall_minus_mono = d
+        return jump
+
     def poll(self, t_s):
         clock = self.clock
+        jump = self._clock_jump_ms()
         self._read()
         res = self.exchange(clock)
         at = res["rx_ns"] if res else self.time()
         row = dict(t=round(t_s, 3), status="OK", offset_est="", rtt="", filtered_offset="", filtered_rtt="",
                    correction=round(clock.correction_ns(at) / 1e6, 6), rate_ppm=round(clock.rate_ppm, 3),
-                   true_error=round(clock.true_error_ns(at) / 1e6, 6), stepped=0, backwards=self.backwards)
+                   true_error=round(clock.true_error_ns(at) / 1e6, 6), stepped=0, backwards=self.backwards,
+                   clock_jump_ms=round(jump, 6))
         if res is None:
             row["status"] = "TIMEOUT"
             return row
@@ -190,7 +203,8 @@ def main():
         w.writerows(rows)
     ok = [r for r in rows if r["status"] == "OK"]
     print(f"polls {len(rows)}, ok {len(ok)}, timeouts {len(rows) - len(ok)}, steps {loop.steps}, "
-          f"backwards {loop.backwards}, frequency estimate {loop.freq_estimate_ppm:+.2f} ppm; {stamper.summary()}")
+          f"backwards {loop.backwards}, frequency estimate {loop.freq_estimate_ppm:+.2f} ppm, max wall-vs-monotonic jump "
+          f"{max((abs(r['clock_jump_ms']) for r in rows), default=0):.3f} ms; {stamper.summary()}")
     if stamper.fallbacks:
         print(f"WARNING: {stamper.fallbacks} sample(s) used user-space time for T4")
     print(f"CSV: {out}")

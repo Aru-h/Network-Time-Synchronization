@@ -21,8 +21,8 @@ def freq_estimate(d, name):
 
 
 def run_table(d):
-    rows = ["| Leg | Setting | Role | Steps (expected) | Backwards | First-poll error (ms) | Steady mean \\|error\\| (ms) | Steady max \\|error\\| (ms) | Bound max (ms) | Polls over bound | Within bound | Worst excess (ms) | Verdict, original strict rule | Verdict, 95% rule |",
-            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"]
+    rows = ["| Leg | Setting | Role | Steps (expected) | Backwards | Max wall-vs-monotonic jump (ms) | First-poll error (ms) | Steady mean \\|error\\| (ms) | Steady max \\|error\\| (ms) | Bound max (ms) | Polls over bound | Within bound | Worst excess (ms) | Verdict, original strict rule | Verdict, 95% rule |",
+            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"]
     legs, an = chk.evaluate(d)
     strict, _ = chk.evaluate(d, strict=True)
     res, res_s = {n: r for n, r, _ in legs}, {n: r for n, r, _ in strict}
@@ -32,13 +32,17 @@ def run_table(d):
         a = an[name]
         role_s = "report only" if role == "INFO" else "PASS/FAIL"
         if a is None:
-            rows.append(f"| {name} | {desc} | {role_s} | pending | | | | | | | | | {res_s[name]} | {res[name]} |")
+            rows.append(f"| {name} | {desc} | {role_s} | pending | | | | | | | | | | {res_s[name]} | {res[name]} |")
             continue
-        rows.append(f"| {name} | {desc} | {role_s} | {a['steps']} ({steps}) | {a['backwards']} | "
+        clk = f"{a['max_clock_jump']:.3f}" if a["clock_checked"] else "not recorded"
+        rows.append(f"| {name} | {desc} | {role_s} | {a['steps']} ({steps}) | {a['backwards']} | {clk} | "
                     f"{a['first_err']:.1f} | {a['mean_err']:.4f} | {a['max_err']:.4f} | {a['max_bound']:.4f} | "
                     f"{a['violations']}/{a['steady']} | {a['within'] * 100:.1f}% | {a['worst_excess']:.4f} | {res_s[name]} | {res[name]} |")
     cmp_ = [r for r in legs if r[0] == "S5 < S4 error"][0]
-    cnt = lambda L: {k: sum(1 for _, r, _ in L if r == k) for k in ("PASS", "FAIL", "SKIP", "INFO")}
+    def cnt(L):
+        c = {k: sum(1 for _, r, _ in L if r == k) for k in ("PASS", "FAIL", "SKIP", "INFO", "INVALID")}
+        c["SKIP"] += c["INVALID"]                                       # INVALID is counted as SKIP
+        return c
     return "\n".join(rows), cmp_, (cnt(strict), cnt(legs)), an
 
 
@@ -148,27 +152,65 @@ controller with a plain socket connect and the second attempt is run 3.
 {table}
 
 S5 < S4 check: {cmp_[1]} ({cmp_[2]}).
-Counts on the five or six leg rows (setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and add 5
-PASS): original strict rule PASS {counts[0]['PASS']}, FAIL {counts[0]['FAIL']}, SKIP {counts[0]['SKIP']}; 95% rule PASS {counts[1]['PASS']}, FAIL {counts[1]['FAIL']}, SKIP {counts[1]['SKIP']}; report-only {counts[1]['INFO']}.
+Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
+add 5 PASS): original strict rule PASS {counts[0]['PASS']}, FAIL {counts[0]['FAIL']}, SKIP {counts[0]['SKIP']} (INVALID {counts[0]['INVALID']}); 95% rule PASS {counts[1]['PASS']}, FAIL {counts[1]['FAIL']}, SKIP {counts[1]['SKIP']} (INVALID {counts[1]['INVALID']}); report-only {counts[1]['INFO']}.
 """)
-    an3 = tabs[runs[-1].name][3] if runs else {}
     obs = ["## Observations that are not explained"]
-    if an3.get("S6_idle_cpubusy") and an3.get("S2_step") and an3.get("S5_load_qoson"):
-        s6, s2, s5, s1 = an3["S6_idle_cpubusy"], an3["S2_step"], an3["S5_load_qoson"], an3["S1_slew"]
-        s2_all = ", ".join(f"{tabs[p.name][3]['S2_step']['mean_err']:.4f}" for p in runs if tabs[p.name][3].get("S2_step"))
-        obs.append(f"""**Why is S5 (loaded, QoS on) more accurate than the idle legs?** Steady mean |true_error|: S5 {s5['mean_err']:.4f} ms
-(0.0080 and 0.0087 in runs 1 and 2), idle S2 {s2_all} ms (runs 1 to 3), idle S1 {s1['mean_err']:.4f} ms in run 3. One leg was added to test
-whether idle wake-up lateness explains it: S6, the same as S2 (skew 500 ms, no load) with CPU-bound background processes
-(2, one per core, at nice 10) keeping the cores busy. In run 3 S6 gave a steady mean of {s6['mean_err']:.4f} ms, below all
-three S2 values. That direction fits the idle-lateness explanation, but it is **one run** of S6, idle S2 itself varied about two-fold
-across runs, and S5 differs from S6 in other ways too (it carries 19 Mbit/s of traffic and the QoS queue). **Observed; the cause is not
-established.**""")
-    obs.append("""**S4 in run 3 is not a valid loaded leg.** The iperf sender log shows 0 bytes per second from about 42 s on, so the queue
-disappeared at poll 40 (50 of 90 polls saw an RTT under 1 ms) and the steady half of S4 ran without load. The cause was not
-investigated. S4 is report-only, so no verdict depends on it, but the S5 < S4 check of run 3 compares against an invalid S4; the
-valid comparisons are runs 1 and 2 (steady mean 15.96 and 15.21 ms with QoS off against 0.0080 and 0.0087 ms with QoS on).""")
+    rows_o = ["| Run | S1 idle (demo cap) | S2 idle | S6 idle + CPU-busy | S5 loaded, QoS on |", "|---|---:|---:|---:|---:|"]
+    pairs = []
+    for p in runs:
+        an = tabs[p.name][3]
+        cell = lambda leg: (f"{an[leg]['mean_err']:.4f}" if an.get(leg) and not chk.invalid_reasons(an[leg], an[leg].get("load")) else "-")
+        rows_o.append(f"| {p.name} | {cell('S1_slew')} | {cell('S2_step')} | {cell('S6_idle_cpubusy')} | {cell('S5_load_qoson')} |")
+        if cell("S6_idle_cpubusy") != "-" and cell("S2_step") != "-":
+            pairs.append((p.name, cell("S6_idle_cpubusy"), cell("S2_step")))
+    obs.append("**Why is S5 (loaded, QoS on) more accurate than the idle legs?** Steady mean |true_error| in ms, valid legs only:\n\n" + "\n".join(rows_o) + f"""
+
+S6 was added to test whether idle wake-up lateness explains it: it is S2 (skew 500 ms, no load) with CPU-bound background processes
+(2, one per core, at nice 10) keeping the cores busy. In the {len(pairs)} runs that have it, S6 was below that run's S2 ({'; '.join(f'{r}: {a} against {b}' for r, a, b in pairs)}), and both stayed
+above S5. That direction fits the idle-lateness explanation, but there are only {len(pairs)} S6 runs, idle S2 itself varies about
+two-fold across runs, and S5 differs from S6 in other ways too (it carries 19 Mbit/s of traffic and the QoS queue).
+**Observed; the cause is not established.**""")
     parts.append("\n\n".join(obs).replace("{os.cpu_count() or 1}", "2"))
-    parts.append(f"""### Both filter variants, measured (S3 versus S3f)
+    load_rows = ["| Run | Leg | Steady window (iperf-server seconds) | Mean load (Mbit/s) | Minimum load (Mbit/s) | Sender running at end | Validity |", "|---|---|---|---:|---:|---|---|"]
+    for p in runs:
+        for leg in chk.LOAD_LEGS:
+            x = tabs[p.name][3].get(leg)
+            if not x:
+                continue
+            ld, bad = x["load"], chk.invalid_reasons(x, x["load"])
+            load_rows.append(f"| {p.name} | {leg} | {ld['window'][0]}..{ld['window'][1]} ({ld['secs']} s) | {ld['mean']:.1f} | {ld['min']:.1f} | "
+                             f"{ld['alive']} | {'INVALID: ' + '; '.join(bad) if bad else 'valid'} |")
+    parts.append(f"""## Validity: which legs count
+
+A leg that fails either check is reported **INVALID**, keeps its data and tables, and is **counted as SKIP, never PASS**.
+
+- **Clock step.** At every poll the loop logs how much (wall clock - `CLOCK_MONOTONIC`) changed since the previous poll
+  (`clock_jump_ms`). The leg is INVALID if any poll shows more than {chk.CLOCK_STEP_MS:g} ms. `CLOCK_MONOTONIC` is slewed like the wall
+  clock, so the difference stays constant while chrony slews and changes only when the wall clock is stepped or the machine
+  is suspended and resumed. {chk.CLOCK_STEP_MS:g} ms is far above the noise of reading two clocks back to back, and far above what a step could
+  do to the soft clock (rate x step is microseconds). Runs 1 to 3 did not record the column, so their legs are "not measured",
+  not INVALID; the check applies from run 4.
+- **Load (S4, S5).** Valid only if the iperf server received more than 0 Mbit/s in every second of the steady window and the
+  sender was still running at the end of the leg. No saturation threshold is applied (the D2 runner has no per-second one);
+  the achieved load is printed so saturation can be read off. The window runs from one second before the loop's steady half
+  (the load starts 2 s before the loop; the mapping is good to about a second) to the last poll; a second missing from the
+  log counts as 0. S5 < S4 is SKIP if either load leg is INVALID.
+
+Load evidence per load leg (iperf server, received rate):
+
+{chr(10).join(load_rows)}
+
+**Run 3, S4 is INVALID.** At about 16:11:01 the VM's wall clock jumped forward by 456.3 s: the server's own request
+timestamps show the gap (between requests 400 and 401), `chronyd` logged "Forward time jump detected", and the iperf sender's log
+claims 497 s although it was started with `-t 120`. iperf's duration is wall-clock based, so the jump ended the sender, and the
+log was padded with 455 zero-rate seconds. The jump is attributed, by the person running the tests, to the laptop going to sleep
+(the VM paused and resumed); that is not verified from inside the VM. This is an environment problem, not a leg-length problem
+(`-t` was the leg plus 30 s). The data of that leg is kept. Because S4 is INVALID, the S5 < S4 check of run 3 is SKIP, so run 3
+shows two SKIPs (one INVALID leg and the dependent comparison), not one. The `SUMMARY.txt` files inside run1 to run3 were written
+by the checker version in force when each run was made.
+
+### Both filter variants, measured (S3 versus S3f)
 
 {variant_rows()}
 

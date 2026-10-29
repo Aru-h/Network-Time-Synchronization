@@ -11,14 +11,25 @@ import sync_loop_check as chk  # noqa: E402
 from sync_loop import FIELDS  # noqa: E402
 
 
-def write(d, name, rows):
-    """rows: (true_error, filtered_rtt, stepped, backwards)"""
+def write(d, name, rows, jumps=None):
+    """rows: (true_error, filtered_rtt, stepped, backwards); jumps: clock_jump_ms per row (None = not recorded)"""
     with (Path(d) / f"{name}.csv").open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=FIELDS)
         w.writeheader()
         for i, (err, frtt, st, bw) in enumerate(rows):
             w.writerow(dict(t=i, status="OK", offset_est=0, rtt=frtt, filtered_offset=0, filtered_rtt=frtt, correction=0,
-                            rate_ppm=0, true_error=err, stepped=st, backwards=bw))
+                            rate_ppm=0, true_error=err, stepped=st, backwards=bw,
+                            clock_jump_ms="" if jumps is None else jumps[i]))
+
+
+def write_load(d, name, per_second, alive=True, unit="Mbits"):
+    """An iperf server log with one 1 s interval per entry, and the runner's note about the sender."""
+    lines = []
+    for i, r in enumerate(per_second):
+        txt = f"{r:.1f} Mbits/sec" if r > 0 else "0.000 bits/sec"
+        lines.append(f"[  1] {i:.4f}-{i + 1:.4f} sec  2.3 MBytes  {txt}   0.8 ms 0/1654 (0%)")
+    (Path(d) / f"{name}_iperf_server.log").write_text("\n".join(lines) + "\n")
+    (Path(d) / f"{name}.txt").write_text(f"polls 90\nload 30M offered, still running at end of leg: {alive}\n")
 
 
 def good(n=20, err=0.01, frtt=0.1, first_step=False):
@@ -67,6 +78,8 @@ class CheckTest(unittest.TestCase):
     def test_report_only_legs_are_info_and_s5_must_beat_s4(self):
         write(self.d, "S4_load_qosoff", good(err=17.0, frtt=34.0, first_step=True))
         write(self.d, "S5_load_qoson", good(err=0.01, frtt=0.05, first_step=True))
+        write_load(self.d, "S4_load_qosoff", [19.4] * 30)
+        write_load(self.d, "S5_load_qoson", [19.4] * 30)
         r = self.res()
         self.assertEqual(r["S4_load_qosoff"][0], "INFO")
         self.assertEqual(r["S5_load_qoson"][0], "PASS")
@@ -101,6 +114,77 @@ class CheckTest(unittest.TestCase):
         self.assertNotIn("S6_idle_cpubusy", self.res())
         write(self.d, "S6_idle_cpubusy", good(first_step=True))
         self.assertEqual(self.res()["S6_idle_cpubusy"][0], "INFO")
+
+    def test_clock_step_makes_a_leg_invalid_and_counts_as_skip(self):
+        rows = good(n=20)
+        write(self.d, "S1_slew", rows, jumps=[0.0] * 20)
+        r = self.res()["S1_slew"]
+        self.assertEqual(r[0], "PASS")
+        self.assertNotIn("not recorded", r[1])
+        write(self.d, "S1_slew", rows, jumps=[0.0] * 7 + [456_300.0] + [0.0] * 12)      # the suspend/resume of run 3
+        r = self.res()["S1_slew"]
+        self.assertEqual(r[0], "INVALID")
+        self.assertIn("456300.0 ms", r[1])
+        self.assertIn("Data kept", r[1])
+        write(self.d, "S1_slew", rows, jumps=[0.0] * 7 + [4.9] + [0.0] * 12)             # under 5 ms: valid
+        self.assertEqual(self.res()["S1_slew"][0], "PASS")
+        write(self.d, "S1_slew", rows, jumps=[0.0] * 7 + [-5.1] + [0.0] * 12)            # a step backwards counts too
+        self.assertEqual(self.res()["S1_slew"][0], "INVALID")
+        write(self.d, "S1_slew", rows)                                                    # column not recorded (runs 1-3)
+        r = self.res()["S1_slew"]
+        self.assertEqual(r[0], "PASS")
+        self.assertIn("clock-step check not recorded", r[1])
+        legs, _ = chk.evaluate(self.d)
+        write(self.d, "S1_slew", rows, jumps=[0.0] * 7 + [456_300.0] + [0.0] * 12)
+        legs, _ = chk.evaluate(self.d)
+        text, n = chk.render(legs)
+        self.assertEqual(n["INVALID"], 1)
+        self.assertGreaterEqual(n["SKIP"], n["INVALID"])                                  # INVALID is inside the SKIP count
+        self.assertIn("of which INVALID 1", text)
+        self.assertNotIn("OVERALL: PASS", text)
+
+    def test_load_gate(self):
+        write(self.d, "S5_load_qoson", good(n=60, first_step=True))                      # 60 polls: steady half is t >= 30
+        write_load(self.d, "S5_load_qoson", [19.4] * 70)
+        r = self.res()["S5_load_qoson"]
+        self.assertEqual(r[0], "PASS")
+        self.assertIn("19.4 Mbit/s mean, 19.4 min", r[1])                                # saturation is printed, no threshold applied
+        write_load(self.d, "S5_load_qoson", [19.4] * 40 + [0.0] * 30)                    # load stalls at 40 s: steady window starts at ~31 s
+        r = self.res()["S5_load_qoson"]
+        self.assertEqual(r[0], "INVALID")
+        self.assertIn("0 Mbit/s", r[1])
+        write_load(self.d, "S5_load_qoson", [19.4] * 70, alive=False)                    # sender gone at the end
+        self.assertEqual(self.res()["S5_load_qoson"][0], "INVALID")
+        write_load(self.d, "S5_load_qoson", [19.4] * 20)                                  # server log ends early: missing seconds count as 0
+        self.assertEqual(self.res()["S5_load_qoson"][0], "INVALID")
+        write_load(self.d, "S5_load_qoson", [0.5] * 70)                                   # a low but non-zero load is valid: no threshold
+        self.assertEqual(self.res()["S5_load_qoson"][0], "PASS")
+        (Path(self.d) / "S5_load_qoson_iperf_server.log").unlink()                        # no log at all
+        self.assertEqual(self.res()["S5_load_qoson"][0], "INVALID")
+
+    def test_zero_rate_lines_are_parsed(self):
+        write_load(self.d, "S4_load_qosoff", [19.4, 0.0, 19.4])
+        got = chk.load_per_second(Path(self.d) / "S4_load_qosoff_iperf_server.log")
+        self.assertEqual(sorted(got), [0, 1, 2])
+        self.assertEqual(got[1], 0.0)                                                     # D2's iperf_server_summary regex would drop this line
+
+    def test_s5_vs_s4_is_skip_when_either_load_leg_is_invalid(self):
+        write(self.d, "S4_load_qosoff", good(n=60, err=17.0, frtt=34.0, first_step=True))
+        write(self.d, "S5_load_qoson", good(n=60, err=0.01, frtt=0.05, first_step=True))
+        write_load(self.d, "S4_load_qosoff", [19.4] * 70)
+        write_load(self.d, "S5_load_qoson", [19.4] * 70)
+        r = self.res()
+        self.assertEqual((r["S4_load_qosoff"][0], r["S5 < S4 error"][0]), ("INFO", "PASS"))
+        write_load(self.d, "S4_load_qosoff", [19.4] * 40 + [0.0] * 30)
+        r = self.res()
+        self.assertEqual((r["S4_load_qosoff"][0], r["S5 < S4 error"]), ("INVALID", ("SKIP", "S4 INVALID")))
+        write_load(self.d, "S4_load_qosoff", [19.4] * 70)
+        write_load(self.d, "S5_load_qoson", [19.4] * 70, alive=False)
+        self.assertEqual(self.res()["S5 < S4 error"][1], "S5 INVALID")
+
+    def test_head_start_matches_the_runner(self):
+        src = (ROOT / "evaluation" / "ubuntu_runner" / "run_sync_loop.py").read_text()
+        self.assertIn(f"LOAD_HEAD_START_S = {chk.LOAD_HEAD_START_S}", src.replace("LOAD_MBPS, LOAD_HEAD_START_S = rt.OVER_LOAD_MBPS, ", "LOAD_HEAD_START_S = "))
 
     def test_table_counts(self):
         write(self.d, "S1_slew", good())

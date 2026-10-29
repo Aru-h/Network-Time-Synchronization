@@ -13,14 +13,24 @@ S = 1_000_000_000
 
 
 class Fake:
+    """Fake wall clock (call it) plus a fake CLOCK_MONOTONIC (.mono): both move with advance(); step_wall() moves
+    only the wall clock, like a clock step or a suspend/resume."""
     def __init__(self):
         self.t = 1_700_000_000 * S
+        self._stepped = 0
 
     def __call__(self):
         return self.t
 
+    def mono(self):
+        return self.t - self._stepped - 1_650_000_000 * S
+
     def advance(self, ns):
         self.t += int(ns)
+
+    def step_wall(self, ns):
+        self.t += int(ns)
+        self._stepped += int(ns)
 
 
 def make_exchange(fake, seed=1, jitter=True, fail_every=0, bias_ms=0.0):
@@ -41,7 +51,7 @@ def make_exchange(fake, seed=1, jitter=True, fail_every=0, bias_ms=0.0):
 def drive(skew_ms=0.0, drift_ppm=0.0, polls=60, cap=500.0, step_ms=128.0, **kw):
     f = Fake()
     clock = SoftClock(skew_ns=skew_ms * 1e6, drift_ppm=drift_ppm, max_slew_ppm=cap, time_fn=f)
-    loop = SyncLoop(clock, make_exchange(f, **kw), time_fn=f, step_ms=step_ms)
+    loop = SyncLoop(clock, make_exchange(f, **kw), time_fn=f, step_ms=step_ms, mono_fn=f.mono)
     rows = []
     for k in range(polls):
         f.advance(1 * S)
@@ -158,6 +168,25 @@ class LoopTest(unittest.TestCase):
             rows.append(loop.poll(k + 1))
         self.assertLess(max(abs(r["true_error"]) for r in rows[45:]), 0.15)
         self.assertAlmostEqual(loop.freq_estimate_ppm, 50.0, delta=8.0)
+
+    def test_clock_jump_column_is_zero_without_a_step_and_shows_a_wall_clock_step(self):
+        f = Fake()
+        clock = SoftClock(skew_ns=20e6, time_fn=f)
+        loop = SyncLoop(clock, make_exchange(f), time_fn=f, mono_fn=f.mono)
+        rows = []
+        for k in range(10):
+            f.advance(1 * S)
+            if k == 5:
+                f.step_wall(456_300_000_000)                                  # the suspend/resume seen in run 3: +456.3 s
+            if k == 8:
+                f.step_wall(3_000_000)                                        # a 3 ms step: reported, below the 5 ms tolerance
+            rows.append(loop.poll(k + 1))
+        jumps = [r["clock_jump_ms"] for r in rows]
+        self.assertEqual(jumps[0], 0.0)
+        for k in (1, 2, 3, 4, 6, 7, 9):
+            self.assertEqual(jumps[k], 0.0, f"poll {k}")                      # slewing and ordinary time passing change nothing
+        self.assertAlmostEqual(jumps[5], 456_300.0, places=3)
+        self.assertAlmostEqual(jumps[8], 3.0, places=6)
 
     def test_timeouts_are_skipped(self):
         clock, loop, rows, _ = drive(skew_ms=20.0, polls=24, fail_every=3, cap=5000)
