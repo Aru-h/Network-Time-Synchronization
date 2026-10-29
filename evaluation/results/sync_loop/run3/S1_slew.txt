@@ -1,0 +1,123 @@
+sync loop: 10.0.0.1:5000 skew +100.0 ms drift +0.0 ppm poll 1.0 s duration 120.0 s step>128.0 ms slew cap 5000.0 ppm phi 100.0 ppm [DEMO slew cap]
+t=   0.0 OK      offset_est=-99.907314 rtt= 1.149269 rate= -5000.0 ppm  true_error=+100.0000 ms
+t=   1.0 OK      offset_est=-93.994467 rtt= 2.057687 rate= -5000.0 ppm  true_error=+94.9883 ms
+t=   2.0 OK      offset_est=-89.986987 rtt= 0.055134 rate= -5000.0 ppm  true_error=+90.0031 ms
+t=   3.0 OK      offset_est=-84.985659 rtt= 0.044245 rate= -5000.0 ppm  true_error=+84.9939 ms
+t=   4.0 OK      offset_est=-79.954622 rtt= 0.171693 rate= -5000.0 ppm  true_error=+80.0019 ms
+t=   5.0 OK      offset_est=-74.984229 rtt= 0.073595 rate= -5000.0 ppm  true_error=+75.0037 ms
+t=   6.0 OK      offset_est=-69.985241 rtt= 0.073525 rate= -5000.0 ppm  true_error=+70.0000 ms
+t=   7.0 OK      offset_est=-64.979668 rtt= 0.098073 rate= -5000.0 ppm  true_error=+65.0044 ms
+t=   8.0 OK      offset_est=-59.984667 rtt= 0.072338 rate= -5000.0 ppm  true_error=+59.9998 ms
+t=   9.0 OK      offset_est=-54.991695 rtt= 0.050757 rate= -5000.0 ppm  true_error=+55.0053 ms
+t=  10.0 OK      offset_est=-49.989083 rtt= 0.074986 rate= -5000.0 ppm  true_error=+50.0045 ms
+t=  11.0 OK      offset_est=-44.988644 rtt= 0.066013 rate= -5000.0 ppm  true_error=+45.0026 ms
+t=  12.0 OK      offset_est= -39.99044 rtt= 0.066306 rate= -5000.0 ppm  true_error=+40.0038 ms
+t=  13.0 OK      offset_est=-34.989131 rtt= 0.065707 rate= -5000.0 ppm  true_error=+35.0038 ms
+t=  14.0 OK      offset_est= -29.99231 rtt=  0.07546 rate= -5000.0 ppm  true_error=+30.0051 ms
+t=  15.0 OK      offset_est=-24.988171 rtt=  0.07585 rate= -5000.0 ppm  true_error=+25.0048 ms
+t=  16.0 OK      offset_est=-19.954113 rtt= 0.165242 rate=-4988.415 ppm  true_error=+20.0034 ms
+t=  17.0 OK      offset_est=-14.992223 rtt= 0.060472 rate=-3747.992 ppm  true_error=+15.0054 ms
+t=  18.0 OK      offset_est= -11.21037 rtt= 0.205686 rate=-2802.435 ppm  true_error=+11.2639 ms
+t=  19.0 OK      offset_est= -8.424544 rtt= 0.190121 rate=-2106.055 ppm  true_error=+8.4592 ms
+t=  20.0 OK      offset_est=  -6.32988 rtt=  0.08909 rate=-1582.434 ppm  true_error=+6.3534 ms
+t=  21.0 OK      offset_est= -4.725032 rtt= 0.164962 rate=-1181.216 ppm  true_error=+4.7719 ms
+t=  22.0 OK      offset_est= -3.581492 rtt= 0.073466 rate=-895.346 ppm  true_error=+3.5911 ms
+t=  23.0 OK      offset_est= -2.675725 rtt= 0.068331 rate=-668.919 ppm  true_error=+2.6952 ms
+t=  24.0 OK      offset_est= -2.012142 rtt= 0.068775 rate=-503.022 ppm  true_error=+2.0266 ms
+t=  25.0 OK      offset_est= -1.509445 rtt= 0.064099 rate=-400.939 ppm  true_error=+1.5236 ms
+t=  26.0 OK      offset_est= -1.108961 rtt= 0.052579 rate=-318.147 ppm  true_error=+1.1227 ms
+t=  27.0 OK      offset_est= -0.791844 rtt= 0.062706 rate=-251.241 ppm  true_error=+0.8045 ms
+t=  28.0 OK      offset_est= -0.527874 rtt= 0.083002 rate=-193.497 ppm  true_error=+0.5533 ms
+t=  29.0 OK      offset_est= -0.347025 rtt= 0.064721 rate=-153.708 ppm  true_error=+0.3597 ms
+t=  30.0 OK      offset_est= -0.166732 rtt= 0.150998 rate=-111.239 ppm  true_error=+0.2057 ms
+t=  31.0 OK      offset_est= -0.051618 rtt= 0.135966 rate= -83.268 ppm  true_error=+0.0947 ms
+t=  32.0 OK      offset_est=  0.018846 rtt= 0.187509 rate= -65.357 ppm  true_error=+0.0113 ms
+t=  33.0 OK      offset_est=  0.111927 rtt= 0.169016 rate= -40.339 ppm  true_error=-0.0540 ms
+t=  34.0 OK      offset_est=  0.111033 rtt= 0.090739 rate= -38.828 ppm  true_error=-0.0944 ms
+t=  35.0 OK      offset_est=  0.147675 rtt= 0.084574 rate=  -27.36 ppm  true_error=-0.1332 ms
+t=  36.0 OK      offset_est=   0.17762 rtt=  0.08141 rate= -17.099 ppm  true_error=-0.1605 ms
+t=  37.0 OK      offset_est=  0.185818 rtt= 0.048538 rate= -12.146 ppm  true_error=-0.1776 ms
+t=  38.0 OK      offset_est=  0.217095 rtt=  0.11062 rate=  -0.935 ppm  true_error=-0.1898 ms
+t=  39.0 OK      offset_est=   0.20647 rtt= 0.070331 rate=  -0.365 ppm  true_error=-0.1907 ms
+t=  40.0 OK      offset_est=  0.214876 rtt= 0.075998 rate=   5.094 ppm  true_error=-0.1911 ms
+t=  41.0 OK      offset_est=  0.217742 rtt= 0.107081 rate=   9.212 ppm  true_error=-0.1860 ms
+t=  42.0 OK      offset_est=  0.198366 rtt= 0.087749 rate=   7.468 ppm  true_error=-0.1768 ms
+t=  43.0 OK      offset_est=  0.192146 rtt= 0.077582 rate=   8.915 ppm  true_error=-0.1693 ms
+t=  44.0 OK      offset_est=  0.197077 rtt= 0.120643 rate=  13.227 ppm  true_error=-0.1604 ms
+t=  45.0 OK      offset_est=  0.167934 rtt= 0.070916 rate=   8.565 ppm  true_error=-0.1472 ms
+t=  46.0 OK      offset_est=  0.174858 rtt= 0.167248 rate=  13.028 ppm  true_error=-0.1386 ms
+t=  47.0 OK      offset_est=  0.166017 rtt=  0.16754 rate=  13.412 ppm  true_error=-0.1256 ms
+t=  48.0 OK      offset_est=  0.153375 rtt= 0.138833 rate=  12.648 ppm  true_error=-0.1122 ms
+t=  49.0 OK      offset_est=  0.115806 rtt= 0.059207 rate=   5.065 ppm  true_error=-0.0995 ms
+t=  50.0 OK      offset_est=  0.110985 rtt= 0.065124 rate=   5.595 ppm  true_error=-0.0945 ms
+t=  51.0 OK      offset_est=  0.104244 rtt= 0.069332 rate=   5.538 ppm  true_error=-0.0889 ms
+t=  52.0 OK      offset_est=   0.09771 rtt= 0.059166 rate=   5.431 ppm  true_error=-0.0833 ms
+t=  53.0 OK      offset_est=  0.092613 rtt= 0.062748 rate=   5.604 ppm  true_error=-0.0779 ms
+t=  54.0 OK      offset_est=  0.087838 rtt= 0.066171 rate=   5.783 ppm  true_error=-0.0723 ms
+t=  55.0 OK      offset_est=  0.081991 rtt=  0.06754 rate=   5.602 ppm  true_error=-0.0665 ms
+t=  56.0 OK      offset_est=  0.077535 rtt= 0.068916 rate=     5.7 ppm  true_error=-0.0609 ms
+t=  57.0 OK      offset_est=  0.076633 rtt= 0.076665 rate=   6.671 ppm  true_error=-0.0552 ms
+t=  58.0 OK      offset_est=    0.0835 rtt= 0.117248 rate=   9.693 ppm  true_error=-0.0485 ms
+t=  59.0 OK      offset_est=  0.074373 rtt= 0.164874 rate=   8.573 ppm  true_error=-0.0389 ms
+t=  60.0 OK      offset_est=  0.070695 rtt= 0.134499 rate=   8.758 ppm  true_error=-0.0303 ms
+t=  61.0 OK      offset_est=     0.037 rtt=  0.09704 rate=   0.913 ppm  true_error=-0.0215 ms
+t=  62.0 OK      offset_est=  0.036774 rtt= 0.072331 rate=   1.431 ppm  true_error=-0.0206 ms
+t=  63.0 OK      offset_est=  0.055884 rtt= 0.152997 rate=   7.081 ppm  true_error=-0.0192 ms
+t=  64.0 OK      offset_est=  0.029825 rtt= 0.088874 rate=   1.033 ppm  true_error=-0.0121 ms
+t=  65.0 OK      offset_est=  0.029333 rtt= 0.085123 rate=   1.368 ppm  true_error=-0.0111 ms
+t=  66.0 OK      offset_est=  0.028549 rtt= 0.093873 rate=   1.618 ppm  true_error=-0.0097 ms
+t=  67.0 OK      offset_est=  0.027722 rtt= 0.086538 rate=   1.845 ppm  true_error=-0.0081 ms
+t=  68.0 OK      offset_est=  0.019731 rtt=   0.0495 rate=   0.155 ppm  true_error=-0.0062 ms
+t=  69.0 OK      offset_est=  0.039553 rtt= 0.103621 rate=   5.729 ppm  true_error=-0.0061 ms
+t=  70.0 OK      offset_est=    0.0182 rtt= 0.082624 rate=   0.675 ppm  true_error=-0.0003 ms
+t=  71.0 OK      offset_est=   0.02417 rtt= 0.087164 rate=   2.545 ppm  true_error=+0.0003 ms
+t=  72.0 OK      offset_est=   0.01402 rtt= 0.066957 rate=   0.227 ppm  true_error=+0.0029 ms
+t=  73.0 OK      offset_est=  0.016357 rtt= 0.102912 rate=   1.066 ppm  true_error=+0.0031 ms
+t=  74.0 OK      offset_est=  0.014894 rtt= 0.073206 rate=   0.933 ppm  true_error=+0.0042 ms
+t=  75.0 OK      offset_est=  0.010169 rtt= 0.070207 rate=  -0.089 ppm  true_error=+0.0051 ms
+t=  76.0 OK      offset_est=  0.012632 rtt= 0.078122 rate=   0.724 ppm  true_error=+0.0050 ms
+t=  77.0 OK      offset_est=  0.019617 rtt= 0.085705 rate=   2.777 ppm  true_error=+0.0057 ms
+t=  78.0 OK      offset_est=  0.013671 rtt= 0.077289 rate=   1.504 ppm  true_error=+0.0085 ms
+t=  79.0 OK      offset_est=  0.008856 rtt= 0.070415 rate=   0.438 ppm  true_error=+0.0100 ms
+t=  80.0 OK      offset_est=  0.014417 rtt=  0.10258 rate=   2.054 ppm  true_error=+0.0105 ms
+t=  81.0 OK      offset_est=   0.00534 rtt= 0.078706 rate=  -0.132 ppm  true_error=+0.0125 ms
+t=  82.0 OK      offset_est=  0.005805 rtt= 0.069123 rate=   0.075 ppm  true_error=+0.0124 ms
+t=  83.0 OK      offset_est=   0.00098 rtt= 0.080706 rate=  -1.116 ppm  true_error=+0.0125 ms
+t=  84.0 OK      offset_est=  0.012804 rtt= 0.087955 rate=    2.04 ppm  true_error=+0.0113 ms
+t=  85.0 OK      offset_est= -0.003819 rtt= 0.065956 rate=  -2.175 ppm  true_error=+0.0134 ms
+t=  86.0 OK      offset_est=   0.01673 rtt= 0.129369 rate=   3.225 ppm  true_error=+0.0112 ms
+t=  87.0 OK      offset_est=  0.027057 rtt= 0.161702 rate=   6.226 ppm  true_error=+0.0144 ms
+t=  88.0 OK      offset_est=  0.040371 rtt= 0.202869 rate=  10.187 ppm  true_error=+0.0206 ms
+t=  89.0 OK      offset_est= -0.012327 rtt= 0.096499 rate=   -3.18 ppm  true_error=+0.0308 ms
+t=  90.0 OK      offset_est= -0.011565 rtt= 0.081914 rate=   -3.17 ppm  true_error=+0.0276 ms
+t=  91.0 OK      offset_est= -0.010103 rtt= 0.097246 rate=  -2.962 ppm  true_error=+0.0245 ms
+t=  92.0 OK      offset_est= -0.003331 rtt= 0.087788 rate=  -1.321 ppm  true_error=+0.0215 ms
+t=  93.0 OK      offset_est= -0.003801 rtt= 0.070788 rate=  -1.498 ppm  true_error=+0.0202 ms
+t=  94.0 OK      offset_est= -0.002281 rtt= 0.075496 rate=  -1.154 ppm  true_error=+0.0187 ms
+t=  95.0 OK      offset_est= -0.000128 rtt= 0.068164 rate=  -0.618 ppm  true_error=+0.0175 ms
+t=  96.0 OK      offset_est=  0.001344 rtt= 0.066206 rate=  -0.229 ppm  true_error=+0.0169 ms
+t=  97.0 OK      offset_est= -0.002177 rtt= 0.071455 rate=  -1.143 ppm  true_error=+0.0167 ms
+t=  98.0 OK      offset_est= -0.006597 rtt= 0.053498 rate=  -2.351 ppm  true_error=+0.0156 ms
+t=  99.0 OK      offset_est=  0.000316 rtt= 0.084288 rate=  -0.618 ppm  true_error=+0.0132 ms
+t= 100.0 OK      offset_est= -0.000252 rtt= 0.043082 rate=  -0.764 ppm  true_error=+0.0126 ms
+t= 101.0 OK      offset_est=  -3.2e-05 rtt= 0.047332 rate=  -0.709 ppm  true_error=+0.0118 ms
+t= 102.0 OK      offset_est=  0.010573 rtt= 0.109455 rate=   2.107 ppm  true_error=+0.0111 ms
+t= 103.0 OK      offset_est=  0.003155 rtt= 0.083581 rate=   0.302 ppm  true_error=+0.0132 ms
+t= 104.0 OK      offset_est=  0.002584 rtt= 0.077386 rate=     0.2 ppm  true_error=+0.0135 ms
+t= 105.0 OK      offset_est=  0.000697 rtt= 0.083011 rate=  -0.261 ppm  true_error=+0.0137 ms
+t= 106.0 OK      offset_est=  0.004688 rtt= 0.078134 rate=    0.81 ppm  true_error=+0.0135 ms
+t= 107.0 OK      offset_est=   0.00194 rtt= 0.072259 rate=   0.153 ppm  true_error=+0.0143 ms
+t= 108.0 OK      offset_est=  0.004392 rtt=   0.0688 rate=   0.835 ppm  true_error=+0.0144 ms
+t= 109.0 OK      offset_est= -0.007548 rtt=  0.05509 rate=  -2.268 ppm  true_error=+0.0153 ms
+t= 110.0 OK      offset_est= -0.005051 rtt= 0.068883 rate=  -1.723 ppm  true_error=+0.0130 ms
+t= 111.0 OK      offset_est=  0.009528 rtt= 0.074426 rate=   2.071 ppm  true_error=+0.0113 ms
+t= 112.0 OK      offset_est=  0.007541 rtt= 0.070425 rate=   1.692 ppm  true_error=+0.0133 ms
+t= 113.0 OK      offset_est=  0.005204 rtt= 0.073134 rate=   1.189 ppm  true_error=+0.0150 ms
+t= 114.0 OK      offset_est=  0.017496 rtt= 0.107513 rate=   4.535 ppm  true_error=+0.0162 ms
+t= 115.0 OK      offset_est=  0.014082 rtt= 0.149859 rate=   3.902 ppm  true_error=+0.0208 ms
+t= 116.0 OK      offset_est= -0.001282 rtt= 0.079674 rate=   0.041 ppm  true_error=+0.0247 ms
+t= 117.0 OK      offset_est=  0.019638 rtt= 0.166934 rate=   5.578 ppm  true_error=+0.0247 ms
+t= 118.0 OK      offset_est=   1.8e-05 rtt= 0.107179 rate=   0.673 ppm  true_error=+0.0303 ms
+t= 119.0 OK      offset_est= -0.010261 rtt= 0.085633 rate=  -2.057 ppm  true_error=+0.0309 ms
+polls 120, ok 120, timeouts 0, steps 0, backwards 0, frequency estimate -0.51 ppm; rx timestamps: kernel=120 user-space-fallback=0
+CSV: /home/seed/Network-Time-Synchronization/evaluation/results/sync_loop/run3/S1_slew.csv

@@ -1,0 +1,39 @@
+qos linux-htb on s1-eth1: default q0, sync q1 min 2000000 bps, total 20000000 bps
+
+### ovs-vsctl list qos
+_uuid               : c64798c3-1c58-471e-98bd-4b61eaf155f2
+external_ids        : {}
+other_config        : {max-rate="20000000"}
+queues              : {0=09272dd5-99f4-4cd1-ba8a-90a989f98956, 1=94208fb3-7d0e-4fc1-83b3-67f7095c5328}
+type                : linux-htb
+
+### ovs-vsctl list queue
+_uuid               : 09272dd5-99f4-4cd1-ba8a-90a989f98956
+dscp                : []
+external_ids        : {}
+other_config        : {max-rate="20000000", min-rate="1", priority="1"}
+
+_uuid               : 94208fb3-7d0e-4fc1-83b3-67f7095c5328
+dscp                : []
+external_ids        : {}
+other_config        : {max-rate="20000000", min-rate="2000000", priority="0"}
+
+### tc -s class show dev s1-eth1
+class htb 1:1 parent 1:fffe prio 1 rate 12Kbit ceil 20Mbit burst 1563b cburst 1564b
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 0 borrowed: 0 giants: 0
+ tokens: 16291666 ctokens: 9775
+
+class htb 1:fffe root rate 20Mbit ceil 20Mbit burst 1500b cburst 1500b
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 0 borrowed: 0 giants: 0
+ tokens: 9375 ctokens: 9375
+
+class htb 1:2 parent 1:fffe prio 0 rate 2Mbit ceil 20Mbit burst 1564b cburst 1564b
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 0 borrowed: 0 giants: 0
+ tokens: 97750 ctokens: 9775
+
