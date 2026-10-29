@@ -1,0 +1,19 @@
+==============================================================================================================
+CHECK                          RESULT  DETAIL
+--------------------------------------------------------------------------------------------------------------
+sandbox: test_agefilter        PASS    Ran 7 tests in 0.021s 
+sandbox: test_sync_loop        PASS    Ran 13 tests in 0.009s 
+sandbox: test_sync_loop_check  PASS    Ran 5 tests in 0.001s 
+environment probe              PASS    ryu, ovs, tc found
+mininet run (exit status)      PASS    runner exit 0
+S1_slew                        PASS    skew 100 ms, slew cap 5000 ppm (DEMO), 120 s: steps 0 (expected 0); bac
+S2_step                        FAIL    skew 500 ms, cap 500 ppm, 60 s: steps 1 (expected 1) at t=[0.0]; backwa
+S3_drift                       PASS    50 ppm drift, 60 s: steps 0 (expected 0); backwards 0; steady |err| max
+S3f_drift_freq                 INFO    50 ppm drift, --freq-compensate, 60 s: steps 0 (expected 0); backwards 
+S4_load_qosoff                 INFO    30 Mbit load, QoS off, skew 500 ms, 90 s: steps 1 (expected 1) at t=[0.
+S5_load_qoson                  PASS    30 Mbit load, QoS on, skew 500 ms, 90 s: steps 1 (expected 1) at t=[0.0
+S5 < S4 error                  PASS    steady mean |true_error| QoS on 0.0087 ms vs QoS off 15.2103 ms (max 0.
+--------------------------------------------------------------------------------------------------------------
+PASS 9   FAIL 1   SKIP 0   (INFO 2: report-only legs, not counted)
+OVERALL: FAIL
+==============================================================================================================
