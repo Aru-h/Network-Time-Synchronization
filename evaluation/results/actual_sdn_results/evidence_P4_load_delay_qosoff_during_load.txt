@@ -1,0 +1,40 @@
+### ovs-ofctl dump-flows s1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=26.547s, table=0, n_packets=21549, n_bytes=32582088, idle_timeout=30, priority=10,udp,in_port=4,nw_dst=10.0.0.1,tp_dst=6000 actions=output:1
+ cookie=0x0, duration=5.105s, table=0, n_packets=20, n_bytes=1351, idle_timeout=20, priority=200,udp,in_port=2,nw_dst=10.0.0.1,tp_dst=5000 actions=output:1
+ cookie=0x0, duration=5.105s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=200,udp,in_port=3,nw_dst=10.0.0.1,tp_dst=5000 actions=output:1
+ cookie=0x0, duration=5.105s, table=0, n_packets=20, n_bytes=2151, idle_timeout=20, priority=200,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2,tp_src=5000 actions=output:2
+ cookie=0x0, duration=5.105s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=200,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.3,tp_src=5000 actions=output:3
+ cookie=0x0, duration=22.476s, table=0, n_packets=4, n_bytes=680, idle_timeout=30, priority=10,in_port=1,dl_dst=00:00:00:00:00:04 actions=output:4
+ cookie=0x0, duration=39.839s, table=0, n_packets=38, n_bytes=4654, priority=0 actions=CONTROLLER:65535
+
+### ovs-ofctl dump-ports s1
+OFPST_PORT reply (OF1.3) (xid=0x2): 5 ports
+  port LOCAL: rx pkts=0, bytes=0, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=0, bytes=0, drop=0, errs=0, coll=0
+           duration=39.843s
+  port  4: rx pkts=21723, bytes=32830912, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=53, bytes=5736, drop=0, errs=0, coll=0
+           duration=39.845s
+  port  1: rx pkts=155, bytes=16763, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=21841, bytes=32753679, drop=0, errs=0, coll=0
+           duration=39.845s
+  port  2: rx pkts=110, bytes=7611, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=148, bytes=15641, drop=0, errs=0, coll=0
+           duration=39.845s
+  port  3: rx pkts=50, bytes=3558, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=88, bytes=9188, drop=0, errs=0, coll=0
+           duration=39.845s
+
+### tc -s qdisc show dev s1-eth1 (bottleneck egress toward h1)
+qdisc htb 5: root refcnt 3 r2q 100 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 32754921 bytes 21839 pkt (dropped 0, overlimits 18151 requeues 0) 
+ backlog 89208b 59p requeues 0
+
+### tc -s class show dev s1-eth1 (sync queue = class 1:2, default queue = 1:1)
+class htb 5:1 root prio 0 rate 20Mbit ceil 20Mbit burst 15Kb cburst 1600b
+ Sent 32756433 bytes 21840 pkt (dropped 0, overlimits 18152 requeues 0) 
+ backlog 87696b 58p requeues 0
+ lended: 21840 borrowed: 0 giants: 0
+ tokens: 76613 ctokens: -9387
+

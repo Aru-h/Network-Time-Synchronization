@@ -5,10 +5,13 @@ Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 0.026
-Average offset(ms): -99.996
-Mean abs error(ms): 0.004
-Min/Max RTT (ms)  : 0.018 / 0.057
+Stale replies     : 0 (ignored, kept reading)
+T4 source         : rx timestamps: kernel=20 user-space-fallback=0
+Average RTT (ms)  : 0.102
+Average offset(ms): -99.970
+Mean abs error(ms): 0.030
+Min/Max RTT (ms)  : 0.029 / 0.586
+Min-RTT filter(8): mean error 0.030 ms -> filtered 0.008 ms (+75% , 13 windows)
 CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P3a_load_under.csv
 ====================================
 

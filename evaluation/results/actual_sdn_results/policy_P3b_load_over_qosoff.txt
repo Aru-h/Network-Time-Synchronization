@@ -1,0 +1,21 @@
+DYNAMIC SDN: t=1793273881.543 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273882.544 dpid=1 port 1 egress 11.61 Mbit/s (normal); sync priority policy = 100
+POLICY t=1793273883.545 dpid=1 state=CONGESTED rate_mbps=20.00 qos=off
+DYNAMIC SYNC FLOW: dpid=1 in=2 out=1 udp/5000 priority=200 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=1 out=2 udp/5000 priority=200 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=3 out=1 udp/5000 priority=200 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=1 out=3 udp/5000 priority=200 (proactive)
+DYNAMIC SDN: t=1793273883.545 dpid=1 port 1 egress 20.00 Mbit/s (congested); sync priority policy = 200
+DYNAMIC SDN: t=1793273884.545 dpid=1 port 1 egress 20.00 Mbit/s (congested); sync priority policy = 200
+DYNAMIC SDN: t=1793273885.545 dpid=1 port 1 egress 20.00 Mbit/s (congested); sync priority policy = 200
+DYNAMIC SDN: t=1793273886.546 dpid=1 port 1 egress 20.01 Mbit/s (congested); sync priority policy = 200
+DYNAMIC SDN: t=1793273887.547 dpid=1 port 1 egress 7.39 Mbit/s (congested); sync priority policy = 200
+POLICY t=1793273888.548 dpid=1 state=CLEAR rate_mbps=0.00 qos=off
+DYNAMIC SYNC FLOW: dpid=1 in=2 out=1 udp/5000 priority=100 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=1 out=2 udp/5000 priority=100 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=3 out=1 udp/5000 priority=100 (proactive)
+DYNAMIC SYNC FLOW: dpid=1 in=1 out=3 udp/5000 priority=100 (proactive)
+DYNAMIC SDN: t=1793273888.548 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273889.549 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273890.550 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273891.550 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100

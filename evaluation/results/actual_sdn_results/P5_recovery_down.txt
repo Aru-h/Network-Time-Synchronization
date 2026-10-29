@@ -5,6 +5,8 @@ Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 0
 Timeout/errors    : 20
+Stale replies     : 0 (ignored, kept reading)
+T4 source         : rx timestamps: kernel=0 user-space-fallback=0
 No successful synchronization samples.
 CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P5_recovery_down.csv
 ====================================

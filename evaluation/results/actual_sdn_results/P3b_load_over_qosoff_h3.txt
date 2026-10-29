@@ -1,0 +1,17 @@
+
+=== ROBUSTNESS EVALUATION ===
+Test              : load
+Server            : 10.0.0.1:5000
+Samples requested : 20
+Successful        : 20
+Timeout/errors    : 0
+Stale replies     : 0 (ignored, kept reading)
+T4 source         : rx timestamps: kernel=20 user-space-fallback=0
+Average RTT (ms)  : 42.393
+Average offset(ms): 71.184
+Mean abs error(ms): 21.184
+Min/Max RTT (ms)  : 32.300 / 55.809
+Min-RTT filter(8): mean error 21.184 ms -> filtered 18.932 ms (+11% , 13 windows)
+CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P3b_load_over_qosoff_h3.csv
+====================================
+

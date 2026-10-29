@@ -1,0 +1,17 @@
+
+=== ROBUSTNESS EVALUATION ===
+Test              : baseline
+Server            : 10.0.0.1:5000
+Samples requested : 20
+Successful        : 20
+Timeout/errors    : 0
+Stale replies     : 0 (ignored, kept reading)
+T4 source         : rx timestamps: kernel=20 user-space-fallback=0
+Average RTT (ms)  : 0.169
+Average offset(ms): 50.034
+Mean abs error(ms): 0.034
+Min/Max RTT (ms)  : 0.039 / 1.210
+Min-RTT filter(8): mean error 0.034 ms -> filtered 0.006 ms (+81% , 13 windows)
+CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P1b_baseline_h3.csv
+====================================
+

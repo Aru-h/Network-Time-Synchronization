@@ -1,0 +1,5 @@
+PASS  flows: priority=200 UDP/5000 sync flow present under load  [4 flow(s)]
+PASS  flows: no set_queue anywhere (QoS off)  [0 flow(s)]
+PASS  tc: no OVS sync queue class (QoS off)  [classes=['5:1']]
+PASS  flows: priority=200 reverted after the load cleared  [0 flow(s) left]
+PASS  flows: sync flows back at priority=100 after the load cleared  [4 flow(s)]

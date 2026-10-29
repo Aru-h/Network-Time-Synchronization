@@ -1,0 +1,2 @@
+PASS  flows: no priority=200 flow under under-capacity load  [0 flow(s)]
+PASS  flows: sync flows stay at priority=100  [4 flow(s)]

@@ -1,1 +1,10 @@
-DYNAMIC SDN: dpid=1 traffic high (5397604 bytes/interval); sync priority policy = 200
+DYNAMIC SDN: t=1793273871.534 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273872.535 dpid=1 port 1 egress 4.58 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273873.536 dpid=1 port 1 egress 10.78 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273874.537 dpid=1 port 1 egress 10.79 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273875.537 dpid=1 port 1 egress 10.80 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273876.538 dpid=1 port 1 egress 6.86 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273877.539 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273878.540 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273879.541 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100
+DYNAMIC SDN: t=1793273880.542 dpid=1 port 1 egress 0.00 Mbit/s (normal); sync priority policy = 100

@@ -5,10 +5,13 @@ Server            : 10.0.0.1:5000
 Samples requested : 20
 Successful        : 20
 Timeout/errors    : 0
-Average RTT (ms)  : 51.379
-Average offset(ms): -99.946
-Mean abs error(ms): 0.207
-Min/Max RTT (ms)  : 50.521 / 52.139
+Stale replies     : 0 (ignored, kept reading)
+T4 source         : rx timestamps: kernel=20 user-space-fallback=0
+Average RTT (ms)  : 51.867
+Average offset(ms): -100.060
+Mean abs error(ms): 0.540
+Min/Max RTT (ms)  : 50.317 / 53.651
+Min-RTT filter(8): mean error 0.540 ms -> filtered 0.046 ms (+92% , 13 windows)
 CSV results       : /home/seed/Network-Time-Synchronization/evaluation/results/actual_sdn_results/P2_delay.csv
 ====================================
 

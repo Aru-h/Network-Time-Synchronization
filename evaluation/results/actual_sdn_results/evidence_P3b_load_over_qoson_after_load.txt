@@ -1,0 +1,10 @@
+### ovs-ofctl dump-flows s1 (load stopped)
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=3.215s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=100,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2,tp_src=5000 actions=output:2
+ cookie=0x0, duration=3.215s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=100,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.3,tp_src=5000 actions=output:3
+ cookie=0x0, duration=9.625s, table=0, n_packets=6751, n_bytes=10207512, idle_timeout=30, priority=10,udp,in_port=4,nw_dst=10.0.0.1,tp_dst=6000 actions=set_queue:0,output:1
+ cookie=0x0, duration=3.215s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=100,udp,in_port=2,nw_dst=10.0.0.1,tp_dst=5000 actions=set_queue:1,output:1
+ cookie=0x0, duration=3.215s, table=0, n_packets=0, n_bytes=0, idle_timeout=20, priority=100,udp,in_port=3,nw_dst=10.0.0.1,tp_dst=5000 actions=set_queue:1,output:1
+ cookie=0x0, duration=5.537s, table=0, n_packets=0, n_bytes=0, idle_timeout=30, priority=10,in_port=1,dl_dst=00:00:00:00:00:04 actions=output:4
+ cookie=0x0, duration=5.536s, table=0, n_packets=0, n_bytes=0, idle_timeout=30, priority=10,in_port=4,dl_dst=00:00:00:00:00:01 actions=output:1
+ cookie=0x0, duration=13.329s, table=0, n_packets=9, n_bytes=2631, priority=0 actions=CONTROLLER:65535

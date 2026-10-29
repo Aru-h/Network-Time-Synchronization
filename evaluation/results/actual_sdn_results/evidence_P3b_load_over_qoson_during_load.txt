@@ -1,0 +1,69 @@
+### ovs-ofctl dump-flows s1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2.623s, table=0, n_packets=19, n_bytes=2043, idle_timeout=20, priority=200,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2,tp_src=5000 actions=output:2
+ cookie=0x0, duration=2.623s, table=0, n_packets=19, n_bytes=2043, idle_timeout=20, priority=200,udp,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.3,tp_src=5000 actions=output:3
+ cookie=0x0, duration=4.029s, table=0, n_packets=6545, n_bytes=9896040, idle_timeout=30, priority=10,udp,in_port=4,nw_dst=10.0.0.1,tp_dst=6000 actions=set_queue:0,output:1
+ cookie=0x0, duration=2.623s, table=0, n_packets=19, n_bytes=1283, idle_timeout=20, priority=200,udp,in_port=2,nw_dst=10.0.0.1,tp_dst=5000 actions=set_queue:1,output:1
+ cookie=0x0, duration=2.623s, table=0, n_packets=19, n_bytes=1283, idle_timeout=20, priority=200,udp,in_port=3,nw_dst=10.0.0.1,tp_dst=5000 actions=set_queue:1,output:1
+ cookie=0x0, duration=7.733s, table=0, n_packets=4, n_bytes=1753, priority=0 actions=CONTROLLER:65535
+
+### ovs-ofctl dump-ports s1
+OFPST_PORT reply (OF1.3) (xid=0x2): 5 ports
+  port LOCAL: rx pkts=0, bytes=0, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=0, bytes=0, drop=0, errs=0, coll=0
+           duration=100.451s
+  port  4: rx pkts=28464, bytes=43019234, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=65, bytes=7210, drop=0, errs=0, coll=0
+           duration=100.453s
+  port  1: rx pkts=248, bytes=26859, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=28668, bytes=42942076, drop=0, errs=0, coll=0
+           duration=100.453s
+  port  2: rx pkts=174, bytes=11935, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=216, bytes=22562, drop=0, errs=0, coll=0
+           duration=100.453s
+  port  3: rx pkts=74, bytes=5180, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=117, bytes=12114, drop=0, errs=0, coll=0
+           duration=100.453s
+
+### tc -s qdisc show dev s1-eth1 (bottleneck egress toward h1)
+qdisc htb 1: root refcnt 3 r2q 10 default 0x1 direct_packets_stat 0 direct_qlen 1000
+ Sent 10085120 bytes 6714 pkt (dropped 0, overlimits 12940 requeues 0) 
+ backlog 98280b 65p requeues 0
+
+### tc -s class show dev s1-eth1 (sync queue = class 1:2, default queue = 1:1)
+class htb 1:1 parent 1:fffe prio 1 rate 12Kbit ceil 20Mbit burst 1563b cburst 1564b
+ Sent 10085241 bytes 6673 pkt (dropped 0, overlimits 6279 requeues 0) 
+ backlog 98280b 65p requeues 0
+ lended: 9 borrowed: 6664 giants: 0
+ tokens: -15178331 ctokens: -1156
+
+class htb 1:fffe root rate 20Mbit ceil 20Mbit burst 1500b cburst 1500b
+ Sent 10088144 bytes 6716 pkt (dropped 0, overlimits 6665 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 6664 borrowed: 0 giants: 0
+ tokens: -9009 ctokens: -9009
+
+class htb 1:2 parent 1:fffe prio 0 rate 2Mbit ceil 20Mbit burst 1564b cburst 1564b
+ Sent 2903 bytes 43 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+ lended: 43 borrowed: 0 giants: 0
+ tokens: 90233 ctokens: 9350
+
+
+### ovs-vsctl list qos
+_uuid               : a63a05c0-02f0-4bcf-9bf4-4bdf9cbdee8b
+external_ids        : {}
+other_config        : {max-rate="20000000"}
+queues              : {0=001b2693-349c-4ede-8bd3-82e16534f623, 1=7d96edba-0dec-4546-b8ea-f60c24dc1f96}
+type                : linux-htb
+
+### ovs-vsctl list queue
+_uuid               : 7d96edba-0dec-4546-b8ea-f60c24dc1f96
+dscp                : []
+external_ids        : {}
+other_config        : {max-rate="20000000", min-rate="2000000", priority="0"}
+
+_uuid               : 001b2693-349c-4ede-8bd3-82e16534f623
+dscp                : []
+external_ids        : {}
+other_config        : {max-rate="20000000", min-rate="1", priority="1"}
