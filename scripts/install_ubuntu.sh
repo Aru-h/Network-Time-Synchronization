@@ -72,7 +72,7 @@ echo "Activate later with:"
 echo "source ~/topic23-venv/bin/activate"
 echo
 echo "Verify with:"
-echo "  ryu-manager controller/time_sync_controller.py --ofp-tcp-listen-port 6653"
+echo "  ryu-manager controller/d2_adaptive_controller.py --ofp-tcp-listen-port 6653"
 echo
 echo "If ovs-vswitchd can't load its kernel module (some VM/container"
 echo "setups), OVS falls back to the slower userspace datapath. If UDP"

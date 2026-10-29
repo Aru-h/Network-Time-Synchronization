@@ -5,7 +5,7 @@ Three result sets exist. They are **different experiments**; do not mix them in 
 | Set | Folder | Environment | Status |
 |---|---|---|---|
 | A (primary) | `results/actual_sdn_results/` | Ubuntu VM: Mininet + Ryu + **kernel** Open vSwitch 3.7.1, netem available | the results to report |
-| B | `results/local_socket_level/` | earlier plain-socket (loopback) results, no SDN | different experiment |
+| B | `sandbox/d1/results/local_socket_level/` | earlier plain-socket (loopback) results, no SDN | different experiment |
 | C | not committed | earlier sandbox run (see "Earlier sandbox run" below) | superseded, kept only as a note |
 
 Everything below is a value read from the committed files. Where something could not be verified, it says so.
@@ -161,7 +161,7 @@ run-to-run variation is unknown.
 - Whether sync traffic behaves differently without the priority-100 rule (no such run).
 - The cause of the P1 first-sample outlier.
 
-## B. `results/local_socket_level/` - earlier plain-socket (loopback) results, no SDN
+## B. `sandbox/d1/results/local_socket_level/` - earlier plain-socket (loopback) results, no SDN
 Measurements of the Track A server + evaluator over loopback with a UDP delay proxy (P2/P4 ~50 ms RTT) and
 background UDP load against the server socket. Mininet/OVS/Ryu were not involved and no bottleneck was verified. This is a
 different experiment from set A, and its numbers must not be mixed with set A's.

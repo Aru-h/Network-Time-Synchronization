@@ -34,7 +34,7 @@ Run the server, then the client:
 
 ```text
 mininet> h1 python3 server_client/time_server.py --host 10.0.0.1 --port 5000 &
-mininet> h2 python3 server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10
+mininet> h2 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10
 ```
 
 Show, in the controller terminal:

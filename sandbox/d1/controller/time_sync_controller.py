@@ -10,7 +10,7 @@ OpenFlow 1.3 controller:
 - Logs the socket-SDN integration event.
 
 Run:
-    ryu-manager controller/time_sync_controller.py --ofp-tcp-listen-port 6653
+    ryu-manager sandbox/d1/controller/time_sync_controller.py --ofp-tcp-listen-port 6653
 """
 
 from ryu.base import app_manager
