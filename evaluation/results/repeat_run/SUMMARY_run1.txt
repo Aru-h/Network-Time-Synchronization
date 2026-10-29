@@ -1,0 +1,70 @@
+P1_baseline      PASS
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.122  rtt_x_baseline=-  mean_abs_offset_err_ms=0.026
+P1b_baseline_h3  PASS [mean offset +50.03 ms for skew -50 ms]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.141  rtt_x_baseline=-  mean_abs_offset_err_ms=0.030
+P2_delay         DELAY ACHIEVED [avg RTT 50.73 ms vs baseline 0.12 ms]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=50.730  rtt_x_baseline=417.2  mean_abs_offset_err_ms=0.199
+A_P3a_load_under PASS - flows: no priority=200 flow under under-capacity load [0 flow(s)]
+A_P3a_load_under PASS - flows: sync flows stay at priority=100 [4 flow(s)]
+P3a_load_under   CONTROL OK - no congestion, as expected [avg RTT 0.08 ms = -0.04 ms over P1 baseline (0.12 ms), 0.7x; gate: added >= 5 ms; 2x ratio (info only): NOT MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.081  rtt_x_baseline=0.7  mean_abs_offset_err_ms=0.025
+    load=10M offered, server_rx=10.5Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=1, qos=off
+A_P3b_load_over_qosoff PASS - flows: priority=200 UDP/5000 sync flow present under load [4 flow(s)]
+A_P3b_load_over_qosoff PASS - flows: no set_queue anywhere (QoS off) [0 flow(s)]
+A_P3b_load_over_qosoff PASS - tc: no OVS sync queue class (QoS off) [classes=['5:1']]
+A_P3b_load_over_qosoff PASS - flows: priority=200 reverted after the load cleared [0 flow(s) left]
+A_P3b_load_over_qosoff PASS - flows: sync flows back at priority=100 after the load cleared [4 flow(s)]
+P3b_load_over_qosoff CONGESTION ACHIEVED [avg RTT 42.19 ms = +42.06 ms over P1 baseline (0.12 ms), 346.9x; gate: added >= 5 ms; 2x ratio (info only): MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=42.185  rtt_x_baseline=346.9  mean_abs_offset_err_ms=21.080
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=1, qos=off, h3(skew -50): ok=20/20 avg_rtt=42.55 err=21.261
+A_P4_load_delay_qosoff PASS - flows: priority=200 UDP/5000 sync flow present under load [4 flow(s)]
+A_P4_load_delay_qosoff PASS - flows: no set_queue anywhere (QoS off) [0 flow(s)]
+A_P4_load_delay_qosoff PASS - tc: no OVS sync queue class (QoS off) [classes=['5:1']]
+A_P4_load_delay_qosoff PASS - flows: priority=200 reverted after the load cleared [0 flow(s) left]
+A_P4_load_delay_qosoff PASS - flows: sync flows back at priority=100 after the load cleared [4 flow(s)]
+P4_load_delay_qosoff CONGESTION ACHIEVED [avg RTT 95.66 ms = +44.93 ms over P2 delay-only baseline (50.73 ms), 1.9x; gate: added >= 5 ms; 2x ratio (info only): NOT MET]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=95.657  rtt_x_baseline=1.9  mean_abs_offset_err_ms=22.776
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0, qos=off
+P5_recovery_down PASS
+    samples_ok=0/20  loss%=100  avg_rtt_ms=-  rtt_x_baseline=-  mean_abs_offset_err_ms=-
+P6_recovery_up   PASS
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.080  rtt_x_baseline=-  mean_abs_offset_err_ms=0.018
+QOS_setup        PASS [qos linux-htb on s1-eth1: default q0, sync q1 min 2000000 bps, total 20000000 bps]
+A_P3b_load_over_qoson PASS - flows: priority=200 UDP/5000 sync flow present under load [4 flow(s)]
+A_P3b_load_over_qoson PASS - flows: set_queue:1 on a priority=200 sync flow (QoS on) [2 flow(s)]
+A_P3b_load_over_qoson PASS - flows: set_queue:1 only on sync (UDP/5000) flows [0 other]
+A_P3b_load_over_qoson PASS - tc: sync class 1:2 and default class 1:1 exist [classes=['1:1', '1:2', '1:fffe']]
+A_P3b_load_over_qoson PASS - tc: sync packets are counted in their own class [1:2: 43 pkts, rate 2Mbit, prio 0]
+A_P3b_load_over_qoson PASS - tc: load packets stay in the default class [1:1: 6686 pkts vs sync 43]
+A_P3b_load_over_qoson PASS - flows: priority=200 reverted after the load cleared [0 flow(s) left]
+A_P3b_load_over_qoson PASS - flows: sync flows back at priority=100 after the load cleared [4 flow(s)]
+P3b_load_over_qoson MEASURED [avg RTT 0.02 ms = -0.10 ms over P1 baseline (0.12 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.024  rtt_x_baseline=0.2  mean_abs_offset_err_ms=0.005
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0, qos=on, h3(skew -50): ok=20/20 avg_rtt=0.03 err=0.008
+QOS_verdict_P3b  QOS EFFECTIVE [sync RTT QoS off 42.19 ms -> QoS on 0.02 ms (+42.16 ms), -0.10 ms over P1 baseline (0.12 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=0.024  rtt_x_baseline=0.2  mean_abs_offset_err_ms=0.005
+A_P4_load_delay_qoson PASS - flows: priority=200 UDP/5000 sync flow present under load [4 flow(s)]
+A_P4_load_delay_qoson PASS - flows: set_queue:1 on a priority=200 sync flow (QoS on) [2 flow(s)]
+A_P4_load_delay_qoson PASS - flows: set_queue:1 only on sync (UDP/5000) flows [0 other]
+A_P4_load_delay_qoson PASS - tc: sync class 1:2 and default class 1:1 exist [classes=['1:1', '1:2', '1:fffe']]
+A_P4_load_delay_qoson PASS - tc: sync packets are counted in their own class [1:2: 63 pkts, rate 2Mbit, prio 0]
+A_P4_load_delay_qoson PASS - tc: load packets stay in the default class [1:1: 15134 pkts vs sync 63]
+A_P4_load_delay_qoson PASS - flows: priority=200 reverted after the load cleared [0 flow(s) left]
+A_P4_load_delay_qoson PASS - flows: sync flows back at priority=100 after the load cleared [4 flow(s)]
+P4_load_delay_qoson MEASURED [avg RTT 50.10 ms = -0.63 ms over P2 delay-only baseline (50.73 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=50.098  rtt_x_baseline=1.0  mean_abs_offset_err_ms=0.013
+    load=30M offered, server_rx=19.4Mbps loss=0.0%, load_still_running_at_dump=True, controller_pkts=0, qos=on
+QOS_verdict_P4   QOS EFFECTIVE [sync RTT QoS off 95.66 ms -> QoS on 50.10 ms (+45.56 ms), -0.63 ms over P2 delay-only baseline (50.73 ms)]
+    samples_ok=20/20  loss%=0  avg_rtt_ms=50.098  rtt_x_baseline=1.0  mean_abs_offset_err_ms=0.013
+
+netem_available=True
+ovs_datapath=kernel
+ovs=ovs-vsctl (Open vSwitch) 3.7.1
+load_tool=iperf
+bottleneck_mbps(h1 link)=20
+edge_mbps(h2,h3,h4 links)=100
+under_load_mbps=10
+over_load_mbps=30
+python=3.14.4
+ryu_manager=/home/seed/topic23-venv/bin/ryu-manager
+t4_user_space_fallbacks=0 (evaluator samples that used user-space time instead of the kernel stamp)

@@ -59,9 +59,41 @@ pending
 
 ## 4. Reading the results
 
-Write this section after the final run, from the tables above: what the QoS-off legs show, what QoS changed, how the offset
-error follows the one-directional queue (error is about half the request-direction queue delay), and what the min-RTT filter
-does and does not help.
+Numbers below are from `evaluation/results/actual_sdn_results/` (run 2) and, where stated, from
+`evaluation/results/repeat_run/SUMMARY_run1.txt` (run 1). Each cell is a mean of 20 samples from h2 (skew +100 ms).
+
+**Without QoS the load builds a queue on the sync path.** With 30 Mbit offered on the 20 Mbit link, iperf delivered 19.4 Mbit/s with
+0 loss, so the sender was held back and the queue stood in front of h1. Sync RTT rose from 0.14 ms (P1) to 42.65 ms (P3b, QoS off)
+and from 50.83 ms (P2) to 97.15 ms (P4, QoS off). The controller had already moved sync flows to priority 200, so OpenFlow priority
+alone did not protect sync: it orders flow lookups, not egress queueing.
+
+**With the sync queue the RTT returns to its unloaded value.** P3b QoS on: 0.03 ms. P4 QoS on: 50.09 ms, against 50.83 ms for the
+delay-only P2. At the dump, class 1:1 (load) held a backlog of 74 packets while class 1:2 (sync) held none, so the load was still
+saturating the bottleneck in the QoS-on legs and the sync packets bypassed its queue.
+
+**Offset error follows the one-way queue.** Only the request direction (s1 to h1) queues, so the offset error is about half the queue
+delay: 21.31 ms (QoS off, P3b) and 23.52 ms (P4) fall to 0.007 ms and 0.012 ms with QoS on. The second client h3 (skew -50 ms) behaves
+the same way: P3b 21.30 ms off, 0.008 ms on.
+
+**Two runs agree closely.** Run 1 versus run 2 mean sync RTT: P3b QoS off 42.19 / 42.65 ms, QoS on 0.024 / 0.027 ms; P4 QoS off
+95.66 / 97.15 ms, QoS on 50.10 / 50.09 ms. The largest difference is 1.5 ms (P4 QoS off).
+
+**The min-RTT filter helps a little under queueing.** Over 8-sample windows it lowered the mean error by 10% / 11% (P3b, run 1 / run 2)
+and 23% / 25% (P4, QoS off), from 21.31 to 19.04 ms and from 23.52 to 17.69 ms in run 2. A standing queue delays most samples in
+the window alike, so choosing the smallest RTT cannot remove it. The large percentages in the unloaded and QoS-on rows are from
+errors that are already below 0.05 ms.
+
+### Limits of these results
+
+- **Two runs of 20 samples each.** Run-to-run spread beyond these two runs is unknown.
+- **Which QoS setting did the work was not isolated.** The result is for the whole configuration: a separate class for sync, a
+  higher OVS queue priority, and a 2 Mbit minimum rate. No run changed one of these alone.
+- **Mininet's shaper is a software token bucket.** The sub-millisecond QoS-on RTT (0.03 ms) reflects that shaper and the
+  hosts' virtual links, not a physical link. No one-frame transmission floor is claimed as a result.
+- **Kernel timestamps:** on loopback the gain over user-space timestamps was under a microsecond, so it is negligible here. It was not
+  measured across the Mininet path.
+- **Min-RTT filter:** as above, about 10-11% (P3b) and 23-25% (P4) because a standing queue cannot be filtered away.
+- **One bottleneck, one switch, one queued port** (toward h1); the load and the reverse direction were not queued differently.
 
 ## 5. Replay page
 
