@@ -75,6 +75,8 @@ not found.
 sudo ./run_d2.sh        # sandbox tests, Mininet/SDN run, PASS/FAIL table; exit 0 only if nothing failed
 ```
 
+The software-clock sync loop is a separate command, `sudo ./evaluation/ubuntu_runner/run_sync_loop.sh`, not part of `run_d2.sh`; see [docs/SYNC_LOOP.md](docs/SYNC_LOOP.md).
+
 ## Demo steps
 
 1. `sudo ./run_d2.sh --out /tmp/d2demo` (a few minutes). Show the PASS/FAIL table.
