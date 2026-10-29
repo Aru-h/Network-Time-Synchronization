@@ -164,9 +164,9 @@ class AdaptiveTimeSyncController(app_manager.RyuApp):
         priority = (SYNC_PRIORITY_CONGESTED if self.congested.get(dp.id)
                     else SYNC_PRIORITY_NORMAL)
         self.logger.info(
-            "DYNAMIC SDN: dpid=%s port %d egress %.2f Mbit/s (%s); "
+            "DYNAMIC SDN: t=%.3f dpid=%s port %d egress %.2f Mbit/s (%s); "
             "sync priority policy = %d",
-            dp.id, CONGESTION_PORT, mbps,
+            time.time(), dp.id, CONGESTION_PORT, mbps,
             "congested" if self.congested.get(dp.id) else "normal", priority)
 
     def _log_policy(self, dp, state, mbps):

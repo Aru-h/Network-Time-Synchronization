@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sync Replay</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --surface-2: #f3f2ef; --border: #dcdad4;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #77756f;
+  --grid: #e6e4de;
+  --off: #eb6834;      /* categorical slot 2: QoS off */
+  --on: #2a78d6;       /* categorical slot 1: QoS on  */
+  --band: rgba(235, 104, 52, .14);
+  --good: #1a7f37; --bad: #c0392b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --surface-2: #242423; --border: #3a3936;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a988f;
+    --grid: #302f2d; --off: #d95926; --on: #3987e5; --band: rgba(217, 89, 38, .20);
+    --good: #4cc26a; --bad: #ef7b6f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --surface-2: #242423; --border: #3a3936;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #9a988f;
+  --grid: #302f2d; --off: #d95926; --on: #3987e5; --band: rgba(217, 89, 38, .20);
+  --good: #4cc26a; --bad: #ef7b6f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface-1); color: var(--text-primary);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 20px; margin: 0 0 2px; }
+h2 { font-size: 15px; margin: 28px 0 4px; }
+.sub { color: var(--text-secondary); margin: 0; }
+.muted { color: var(--text-muted); font-size: 12.5px; }
+button { font: inherit; color: var(--text-primary); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+button[aria-pressed="true"] { border-color: var(--on); box-shadow: inset 0 0 0 1px var(--on); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 14px 0 4px; }
+.legend { display: flex; gap: 16px; margin: 6px 0; color: var(--text-secondary); font-size: 13px; }
+.sw { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.panel { position: relative; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 8px 4px; }
+svg text { fill: var(--text-secondary); font: 11px system-ui, sans-serif; }
+svg .title { fill: var(--text-primary); font-weight: 600; font-size: 12px; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 9px; font-size: 12px; white-space: nowrap; display: none; z-index: 5; }
+.pill { display: inline-block; border-radius: 10px; padding: 1px 8px; font-size: 12px; border: 1px solid var(--border); }
+.pill.p200 { border-color: var(--off); color: var(--text-primary); }
+.pill.q { border-color: var(--on); }
+.ok::before { content: "✓ "; color: var(--good); } .no::before { content: "✗ "; color: var(--bad); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--text-secondary); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+code, pre { font: 12px ui-monospace, Menlo, Consolas, monospace; }
+pre { background: var(--surface-2); padding: 8px; border-radius: 6px; overflow: auto; max-height: 220px; }
+.scroll { overflow-x: auto; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+.note { background: var(--surface-2); border-radius: 6px; padding: 8px 12px; color: var(--text-secondary); margin: 10px 0; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <h1>Time-sync replay</h1>
+    <p class="sub" id="source"></p>
+  </div>
+  <div class="row" style="margin:0">
+    <button id="theme" aria-label="Toggle light and dark theme">Theme</button>
+    <button id="tableview" aria-pressed="false">Table view</button>
+  </div>
+</header>
+
+<div class="row" id="tabs" role="group" aria-label="Scenario"></div>
+<div id="notes"></div>
+
+<h2>Sync RTT and offset error per sample</h2>
+<p class="muted">Each sample is one four-timestamp exchange from h2 (skew +100 ms) while h4 sends the load. QoS off and on are separate runs, aligned by sample number.</p>
+<div class="legend" id="legend1"></div>
+<div class="grid2" id="charts"></div>
+
+<h2>Controller policy timeline</h2>
+<p class="muted">Egress rate of OpenFlow port 1 (toward h1), the two hysteresis thresholds, and the sync priority the controller chose (100 normal, 200 congested).</p>
+<div id="policy"></div>
+
+<h2>Flow table under load</h2>
+<div class="row" id="flowtabs" role="group" aria-label="Variant"></div>
+<div id="flows"></div>
+
+<div id="tables" hidden></div>
+</main>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = (s, r = document) => r.querySelector(s);
+const el = (tag, attrs = {}, html = "") => { const e = document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); e.innerHTML = html; return e; };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const NS = "http://www.w3.org/2000/svg";
+const LABEL = { P3b_load_over: "Load over capacity (30 Mbit on 20 Mbit)", P4_load_delay: "Load + 50 ms delay" };
+const VAR = { off: { name: "QoS off", color: "--off" }, on: { name: "QoS on", color: "--on" } };
+let scenario = Object.keys(D.scenarios)[0], flowVar = null;
+try { const t = localStorage.getItem("replay-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+function ticks(lo, hi, n = 5) {
+  const span = hi - lo || 1, raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw) || raw;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+
+// Generic line chart. series: [{name,color,pts:[{x,y,tip}], step}], extras: hlines, bands
+function chart(host, o) {
+  host.innerHTML = "";
+  const W = Math.max(host.clientWidth, 300), H = o.height || 230, m = { l: 46, r: 64, t: 26, b: 34 };
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.title);
+  const all = o.series.flatMap(s => s.pts), xs = all.map(p => p.x);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs, x0 + 1);
+  const ymax = Math.max(o.yMin0 ?? 0, ...all.map(p => p.y), ...(o.hlines || []).map(h => h.y)) * 1.12 || 1;
+  const X = v => m.l + (v - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  const add = (tag, a, text) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; };
+  add("text", { x: m.l, y: 14, class: "title" }, o.title);
+  (o.bands || []).forEach(b => add("rect", { x: X(Math.max(b.x0, x0)), y: m.t, width: Math.max(0, X(Math.min(b.x1, x1)) - X(Math.max(b.x0, x0))), height: H - m.t - m.b, fill: css("--band") }));
+  ticks(0, ymax).forEach(v => { add("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: css("--grid") }); add("text", { x: m.l - 6, y: Y(v) + 4, "text-anchor": "end" }, v); });
+  ticks(x0, x1, 6).forEach(v => add("text", { x: X(v), y: H - m.b + 15, "text-anchor": "middle" }, v));
+  add("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle" }, o.xLabel);
+  add("text", { x: 12, y: (H - m.b + m.t) / 2, "text-anchor": "middle", transform: `rotate(-90 12 ${(H - m.b + m.t) / 2})` }, o.yLabel);
+  (o.hlines || []).forEach(h => { add("line", { x1: m.l, x2: W - m.r, y1: Y(h.y), y2: Y(h.y), stroke: css("--text-muted"), "stroke-dasharray": "4 4" }); add("text", { x: m.l + 6, y: Y(h.y) - 5 }, h.label); });
+  o.series.forEach(s => {
+    const col = css(s.color);
+    let d = "", prev = null;
+    s.pts.forEach(p => { if (p.y == null) { prev = null; return; }
+      if (s.step && prev) d += `H${X(p.x)}`;
+      d += (prev ? (s.step ? `V${Y(p.y)}` : `L${X(p.x)} ${Y(p.y)}`) : `M${X(p.x)} ${Y(p.y)}`); prev = p; });
+    add("path", { d, fill: "none", stroke: col, "stroke-width": 2, "stroke-linejoin": "round" });
+    if (!s.step) s.pts.forEach(p => p.y != null && add("circle", { cx: X(p.x), cy: Y(p.y), r: 4, fill: col, stroke: css("--surface-1"), "stroke-width": 2 }));
+    const last = [...s.pts].reverse().find(p => p.y != null);
+    if (last) add("text", { x: X(last.x) + 8, y: Y(last.y) + 4 }, s.name);
+  });
+  const cross = add("line", { y1: m.t, y2: H - m.b, stroke: css("--text-muted"), visibility: "hidden" });
+  const hit = add("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" });
+  const tip = el("div", { class: "tip" });
+  host.style.position = "relative"; host.appendChild(svg); host.appendChild(tip);
+  hit.addEventListener("mousemove", ev => {
+    const r = svg.getBoundingClientRect(), mx = (ev.clientX - r.left) / r.width * W;
+    let best = null, bd = 1e9;
+    o.series.forEach(s => s.pts.forEach(p => { const dx = Math.abs(X(p.x) - mx); if (dx < bd) { bd = dx; best = p; } }));
+    if (!best) return;
+    cross.setAttribute("x1", X(best.x)); cross.setAttribute("x2", X(best.x)); cross.setAttribute("visibility", "visible");
+    const rows = o.series.map(s => { const p = s.pts.reduce((a, b) => Math.abs(b.x - best.x) < Math.abs(a.x - best.x) ? b : a);
+      return `<div><span class="sw" style="background:${css(s.color)}"></span>${esc(s.name)}: ${p.y == null ? "timeout" : p.y.toFixed(2) + " " + (o.unit || "")}</div>`; }).join("");
+    tip.innerHTML = `<b>${o.xLabel.split(" ")[0]} ${best.x}</b>${rows}`;
+    tip.style.display = "block";
+    tip.style.left = Math.min(X(best.x) / W * r.width + 12, r.width - 170) + "px"; tip.style.top = "30px";
+  });
+  hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+}
+
+function samples(rows, field) { return rows.map(r => ({ x: r.seq, y: r.ok ? r[field] : null })); }
+function variants() { return Object.keys(D.scenarios[scenario]).sort().reverse(); }  // on, off
+
+function render() {
+  const sc = D.scenarios[scenario], vs = variants();
+  $("#source").textContent = `Results: ${D.source}`;
+  const tabs = $("#tabs"); tabs.innerHTML = "";
+  Object.keys(D.scenarios).forEach(k => { const b = el("button", { "aria-pressed": k === scenario }, LABEL[k] || k); b.onclick = () => { scenario = k; flowVar = null; render(); }; tabs.appendChild(b); });
+
+  const notes = $("#notes"); notes.innerHTML = "";
+  const base = D.baseline[scenario.startsWith("P4") ? "P2" : "P1"];
+  const stat = v => { const ok = sc[v].rows.filter(r => r.ok); return ok.length ? ok.reduce((a, r) => a + r.rtt, 0) / ok.length : null; };
+  let verdict = "";
+  if (sc.on && sc.off) {
+    const a = stat("off"), b = stat("on");
+    const f = v => v < 1 ? v.toFixed(2) : v.toFixed(1);
+    verdict = `Mean sync RTT <b>${f(a)} ms</b> with QoS off, <b>${f(b)} ms</b> with QoS on (${(a - b >= 0 ? "-" : "+") + f(Math.abs(a - b))} ms)` + (base != null ? `; unloaded baseline ${base.toFixed(1)} ms` : "") + ".";
+  } else verdict = "This run contains only the QoS-off variant (no QoS on/off comparison).";
+  notes.appendChild(el("div", { class: "note" }, verdict));
+  D.verdicts.filter(l => l.startsWith("QOS_verdict")).forEach(l => notes.appendChild(el("div", { class: "muted" }, esc(l))));
+
+  $("#legend1").innerHTML = vs.map(v => `<span><span class="sw" style="background:var(${VAR[v].color})"></span>${VAR[v].name}</span>`).join("");
+  const mk = (title, field, unit, ylab) => { const host = el("div", { class: "panel" }); $("#charts").appendChild(host);
+    chart(host, { title, unit, xLabel: "Sample number", yLabel: ylab, height: 230,
+      series: vs.map(v => ({ name: VAR[v].name, color: VAR[v].color, pts: samples(sc[v].rows, field) })),
+      hlines: field === "rtt" && base != null ? [{ y: base, label: "baseline" }] : [] }); };
+  $("#charts").innerHTML = ""; mk("Sync RTT", "rtt", "ms", "RTT (ms)"); mk("Offset error", "err", "ms", "|offset error| (ms)");
+
+  // policy timeline, one panel per variant
+  $("#policy").innerHTML = "";
+  vs.forEach(v => {
+    const pts = sc[v].policy;
+    const host = el("div", { class: "panel", style: "margin-bottom:10px" }); $("#policy").appendChild(host);
+    if (!pts.length) { host.innerHTML = `<p class="muted" style="padding:8px">${VAR[v].name}: no controller policy lines in this run.</p>`; return; }
+    const timed = pts.every(p => p.t != null), t0 = timed ? pts[0].t : 0;
+    const P = pts.map((p, i) => ({ x: timed ? +(p.t - t0).toFixed(1) : i * 2, y: p.mbps, congested: p.congested, priority: p.priority }));
+    const bands = []; P.forEach((p, i) => { if (p.congested) { const e = P[i + 1] ? P[i + 1].x : p.x + 1; bands.push({ x0: p.x, x1: e }); } });
+    chart(host, { title: `${VAR[v].name}: port 1 egress rate and sync priority`, unit: "Mbit/s", xLabel: timed ? "Seconds since first poll" : "Seconds (poll interval 2 s, no timestamps in this run)", yLabel: "Mbit/s", height: 200,
+      series: [{ name: "port 1", color: VAR[v].color, pts: P }], bands,
+      hlines: [{ y: D.thresholds.enter, label: "enter 15" }, { y: D.thresholds.exit, label: "exit 8" }] });
+    const ev = sc[v].events.map(e => `<span class="pill ${e.state === "CONGESTED" ? "p200" : ""}">${e.state === "CONGESTED" ? "→ priority 200" : "→ priority 100"} at ${(e.t - (timed ? t0 : e.t)).toFixed(1)} s (${e.mbps.toFixed(1)} Mbit/s)</span>`).join(" ");
+    const prio = [...new Set(P.map(p => p.priority))].join(" / ");
+    host.appendChild(el("div", { class: "muted", style: "padding:2px 8px 6px" }, `Priorities seen: ${prio}. ${ev || "No transition events logged."}`));
+  });
+
+  // flow tables
+  if (!flowVar || !sc[flowVar]) flowVar = vs[0];
+  const ft = $("#flowtabs"); ft.innerHTML = "";
+  vs.forEach(v => { const b = el("button", { "aria-pressed": v === flowVar }, VAR[v].name); b.onclick = () => { flowVar = v; render(); }; ft.appendChild(b); });
+  const fv = sc[flowVar];
+  let html = "";
+  if (!fv.flows.length) html = `<p class="muted">No flow dump for this variant.</p>`;
+  else html = `<div class="scroll"><table><tr><th class="num">Priority</th><th>Match</th><th>Actions</th><th class="num">Packets</th></tr>` +
+    fv.flows.map(f => `<tr><td class="num">${f.priority >= 200 ? `<span class="pill p200">${f.priority}</span>` : f.priority}</td><td><code>${esc(f.match)}</code></td><td><code>${esc(f.actions).replace(/set_queue:\d+/g, m => `<span class="pill q">${m}</span>`)}</code></td><td class="num">${f.pkts}</td></tr>`).join("") + `</table></div>`;
+  if (fv.assertions.length) html += `<h2 style="font-size:13px">Assertions</h2>` + fv.assertions.map(a => `<div class="${a.ok ? "ok" : "no"}">${esc(a.text)}</div>`).join("");
+  if (fv.tc) html += `<details><summary class="muted">tc -s class show dev s1-eth1</summary><pre>${esc(fv.tc)}</pre></details>`;
+  $("#flows").innerHTML = html;
+
+  // table view (accessible alternative to the charts)
+  const tv = $("#tables"); tv.innerHTML = "<h2>Per-sample data</h2>";
+  vs.forEach(v => { tv.innerHTML += `<h3 style="font-size:13px">${VAR[v].name}</h3><div class="scroll"><table><tr><th class="num">Sample</th><th class="num">RTT (ms)</th><th class="num">Offset error (ms)</th></tr>` +
+    sc[v].rows.map(r => `<tr><td class="num">${r.seq}</td><td class="num">${r.ok ? r.rtt.toFixed(3) : "timeout"}</td><td class="num">${r.ok ? r.err.toFixed(3) : "-"}</td></tr>`).join("") + `</table></div>`; });
+}
+
+$("#theme").onclick = () => { const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const nx = cur === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = nx; try { localStorage.setItem("replay-theme", nx); } catch (e) {} render(); };
+$("#tableview").onclick = e => { const on = e.target.getAttribute("aria-pressed") !== "true"; e.target.setAttribute("aria-pressed", on); $("#tables").hidden = !on; };
+addEventListener("resize", () => render());
+render();
+</script>
+</body>
+</html>

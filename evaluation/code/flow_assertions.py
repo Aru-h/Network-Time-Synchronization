@@ -44,6 +44,24 @@ def check_flows(text, qos_on):
     return res
 
 
+def check_no_escalation(text):
+    """Control (load under capacity): no priority=200 sync flow, sync stays at priority 100."""
+    lines = _flow_lines(text)
+    p200 = [l for l in lines if re.search(r"priority=200\b", l)]
+    p100 = [l for l in lines if re.search(r"priority=100\b", l) and re.search(SYNC_MATCH, l)]
+    return [("flows: no priority=200 flow under under-capacity load", not p200, f"{len(p200)} flow(s)"),
+            ("flows: sync flows stay at priority=100", bool(p100), f"{len(p100)} flow(s)")]
+
+
+def check_reverted(text):
+    """After the load stops the controller must take the sync flows back to priority 100."""
+    lines = _flow_lines(text)
+    p200 = [l for l in lines if re.search(r"priority=200\b", l)]
+    p100 = [l for l in lines if re.search(r"priority=100\b", l) and re.search(SYNC_MATCH, l)]
+    return [("flows: priority=200 reverted after the load cleared", not p200, f"{len(p200)} flow(s) left"),
+            ("flows: sync flows back at priority=100 after the load cleared", bool(p100), f"{len(p100)} flow(s)")]
+
+
 def parse_classes(text):
     """{'1:2': {'prio': 0, 'rate': '2Mbit', 'pkts': 12, 'bytes': 1800}, ...}"""
     classes = {}

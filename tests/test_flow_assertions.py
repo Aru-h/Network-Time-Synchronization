@@ -40,6 +40,10 @@ class T(unittest.TestCase):
         self.assertTrue(ok(fa.check_flows(FLOWS_OFF, False)))
         self.assertFalse(ok(fa.check_flows(FLOWS_ON, False)))     # set_queue present while off
 
+    def test_reverted(self):
+        self.assertTrue(ok(fa.check_reverted(FLOWS_100)))
+        self.assertFalse(ok(fa.check_reverted(FLOWS_ON)))
+
     def test_tc(self):
         self.assertTrue(ok(fa.check_tc_classes(TC_ON, True)))
         self.assertFalse(ok(fa.check_tc_classes(TC_ZERO, True)))  # sync not in own class
