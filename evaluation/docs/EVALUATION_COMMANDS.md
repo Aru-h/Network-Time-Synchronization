@@ -1,202 +1,72 @@
-# Evaluation — Exact Ubuntu/Mininet Commands
+# Evaluation - commands
 
-> **Note:** this manual procedure uses the interactive `mininet/d2_topology.py`, whose links are **not shaped**, so
-> there is no bottleneck and the "load" steps will not create congestion. Use `ubuntu_runner/run_evaluation.sh`
-> for the congestion/robustness results; keep this file only for a step-by-step demo.
+Two ways to run the evaluation. Use the automated one for results; the manual one is for a step-by-step demo.
 
-
-## Terminal 1 — Ryu Track B controller
+## Automated (all results come from this)
 
 From the repository root:
+
+```bash
+sudo ./run_d2.sh                      # sandbox tests + Mininet run + PASS/FAIL table (exit 0 only if nothing failed)
+sudo ./run_d2.sh --out /tmp/d2run     # same, results into /tmp/d2run (a full run otherwise replaces
+                                      #   evaluation/results/actual_sdn_results/)
+./run_d2.sh --sandbox-only            # no root: loopback and unit tests only
+sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh   # probe the environment, touch nothing
+```
+
+`EVAL_RYU_MANAGER=~/topic23-venv/bin/ryu-manager` and `EVAL_PYTHON` override tool discovery.
+
+Then, from the results folder:
+
+```bash
+python3 evaluation/code/error_reduction.py          # mean vs min-RTT-filtered error table
+python3 evaluation/code/build_replay.py             # evaluation/results/actual_sdn_results/replay.html (offline page)
+python3 evaluation/code/fill_report.py              # fill the generated tables in docs/D2_REPORT.md
+```
+
+## Manual (interactive demo)
+
+Terminal 1, the controller (add `D2_QOS=on` for the QoS-on case):
 
 ```bash
 ryu-manager controller/d2_adaptive_controller.py --ofp-tcp-listen-port 6653
 ```
 
-Leave this terminal open.
-
-## Terminal 2 — Mininet
+Terminal 2, the topology (links are shaped: h1 at 20 Mbit, others 100 Mbit; `--qos on` attaches the queues):
 
 ```bash
-sudo python3 mininet/d2_topology.py
+sudo python3 mininet/d2_topology.py [--qos on]
 ```
 
-Inside Mininet:
+Inside Mininet (use absolute paths, from `pwd`):
 
 ```text
-mininet> pingall
+mininet> h1 python3 /ABS/server_client/time_server.py &
+mininet> h2 python3 /ABS/evaluation/code/robustness_eval.py --test baseline --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/h2.csv
+mininet> h3 python3 /ABS/evaluation/code/robustness_eval.py --test baseline --server 10.0.0.1 --samples 20 --skew-ms -50 --csv /tmp/h3.csv
 ```
 
-Expected: all hosts should reach each other.
-
-## Start Track A server
-
-The Track A server must already be available on h1. From the project root,
-use the absolute path shown by `pwd`.
+Load, while h2 samples (needs `iperf`):
 
 ```text
-mininet> h1 python3 /ABSOLUTE/PATH/server_client/time_server.py --host 10.0.0.1 --port 5000
+mininet> h1 iperf -s -u -p 6000 &
+mininet> h4 iperf -c 10.0.0.1 -u -p 6000 -b 30M -t 30 &
+mininet> h2 python3 /ABS/evaluation/code/robustness_eval.py --test load --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load.csv
 ```
 
-Leave it running.
-
-## Put the evaluator on the Mininet hosts
-
-If the evaluator file is stored in the project root:
+Evidence while the load runs:
 
 ```text
-mininet> h2 cp /ABSOLUTE/PATH/evaluation/code/robustness_eval.py /tmp/robustness_eval.py
-mininet> h3 cp /ABSOLUTE/PATH/evaluation/code/robustness_eval.py /tmp/robustness_eval.py
+mininet> sh ovs-ofctl -O OpenFlow13 dump-flows s1        # priority=200 UDP/5000; set_queue:1 with QoS on
+mininet> sh tc -s class show dev s1-eth1                 # with QoS on: sync packets in class 1:2
 ```
 
-Then use `/tmp/robustness_eval.py` in the following commands.
-
-## TEST 1 — Baseline
+Delay on the host side (keeps the shaping; adds netem under Mininet's htb leaf):
 
 ```text
-mininet> h2 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/baseline.csv
+mininet> h2 tc qdisc replace dev h2-eth0 parent 5:1 handle 10: netem delay 25ms
+mininet> h1 tc qdisc replace dev h1-eth0 parent 5:1 handle 10: netem delay 25ms
 ```
 
-Record:
-- successful samples
-- timeout/errors
-- average RTT
-- average offset
-- mean absolute error
-
-## TEST 2 — Multiple clients
-
-Open two Mininet commands (or run one after the other):
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/client1.csv
-```
-
-```text
-mininet> h3 python3 /tmp/robustness_eval.py --test baseline --server 10.0.0.1 --samples 10 --skew-ms -50 --csv /tmp/client2.csv
-```
-
-## TEST 3 — 50 ms network delay
-
-Add delay:
-
-```text
-mininet> h2 tc qdisc add dev h2-eth0 root netem delay 50ms
-```
-
-Run:
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/delay.csv
-```
-
-Remove delay:
-
-```text
-mininet> h2 tc qdisc del dev h2-eth0 root
-```
-
-## TEST 4 — Background load / congestion
-
-Start load from h4:
-
-```text
-mininet> h4 python3 /ABSOLUTE/PATH/server_client/load_generator.py 10.0.0.1 --port 6000 --pps 3000 --duration 15 --size 1024
-```
-
-While it runs, execute:
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test load --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load.csv
-```
-
-Watch the Ryu terminal for messages such as:
-
-```text
-DYNAMIC SDN:
-BACKGROUND TRAFFIC:
-DYNAMIC SYNC FLOW:
-```
-
-## TEST 5 — Load + delay
-
-Add delay:
-
-```text
-mininet> h2 tc qdisc add dev h2-eth0 root netem delay 50ms
-```
-
-Start load:
-
-```text
-mininet> h4 python3 /ABSOLUTE/PATH/server_client/load_generator.py 10.0.0.1 --port 6000 --pps 3000 --duration 15 --size 1024
-```
-
-During the load:
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test load_delay --server 10.0.0.1 --samples 20 --skew-ms 100 --csv /tmp/load_delay.csv
-```
-
-Remove delay:
-
-```text
-mininet> h2 tc qdisc del dev h2-eth0 root
-```
-
-## TEST 6 — Failure and recovery
-
-Stop the h1 server with Ctrl+C in its terminal.
-
-Then run:
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test recovery --server 10.0.0.1 --samples 5 --skew-ms 100 --csv /tmp/failure.csv
-```
-
-You should see timeout/errors.
-
-Restart the server:
-
-```text
-mininet> h1 python3 /ABSOLUTE/PATH/server_client/time_server.py --host 10.0.0.1 --port 5000
-```
-
-Then run again:
-
-```text
-mininet> h2 python3 /tmp/robustness_eval.py --test recovery --server 10.0.0.1 --samples 10 --skew-ms 100 --csv /tmp/recovery.csv
-```
-
-You should see successful synchronization.
-
-## TEST 7 — SDN evidence
-
-Inside Mininet:
-
-```text
-mininet> sh ovs-ofctl -O OpenFlow13 dump-flows s1
-```
-
-Capture a screenshot showing the UDP/5000 synchronization rule and its priority.
-
-## Clean up
-
-```text
-mininet> exit
-```
-
-Then:
-
-```bash
-sudo mn -c
-```
-
-## What to submit
-
-For the evaluation, keep:
-1. `robustness_eval.py`
-2. actual result CSVs/screenshots
-3. the commands/results used in the demo
-
-Do not invent performance values. Fill the final report from the actual output.
+Remove it with `tc qdisc del dev <host>-eth0 parent 5:1 handle 10:`. Failure and recovery: stop the server (Ctrl+C), run a client
+(timeouts), restart it, run again. Clean up with `exit`, then `sudo mn -c`.

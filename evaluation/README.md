@@ -37,17 +37,18 @@ did not reach its condition, or was inconclusive.
   treats as acceptable). The earlier rule (RTT >= 2x baseline) is still printed for information, but it fails P4 (1.9x in the committed
   run) although P4 has the same ~45 ms queue as P3b, because queueing adds to fixed delay instead of multiplying it. The
   committed `SUMMARY.txt` (2026-10-27) uses the new rule and reports P4 as CONGESTION ACHIEVED (+44.50 ms).
-- **Priority gives no protection here.** Sync flows (priority 100) and the load flow (priority 10) output to the same port
-  and the same FIFO queue; the controller installs no set-queue action, meter or DSCP. The priority-200 policy is
-  logged, but the committed run (2026-10-27, fixed D2 controller) installed only priority-100 sync flows, because the
-  runner's sync flows never expire before the load starts; P3b still added +42.55 ms with the policy at 200. A hand-run
-  D2 demo on the same day (sync flows left idle 25 s, then load) did install `priority=200` UDP/5000 flows. Observed: no
-  protection (there is no run without the rule to compare). See `RESULT_STATUS.md`.
+- **OpenFlow priority alone gives no protection; the queue does.** Priority 100/200 only orders flow-table lookups. Sync and
+  load still leave through the same FIFO queue unless the controller adds `set_queue`. The QoS-off legs (P3b, P4) show that
+  queue (about +42 ms and +46 ms); the QoS-on legs attach an OVS linux-htb QoS on `s1-eth1` (sync queue minimum 2 Mbit) and the
+  controller sets `set_queue:1` on sync flows. The verdict is taken from the measured sync RTT, not from the configuration.
+  The controller detects congestion from OpenFlow port 1 only, with hysteresis, installs priority 200 as soon as it does,
+  and reverts when the load clears (asserted after each loaded test). See `RESULT_STATUS.md` for the numbers.
 
 ## Run (on the Ubuntu VM, from the repository root)
 ```
-sudo ./evaluation/ubuntu_runner/run_evaluation.sh
+sudo ./run_d2.sh        # sandbox tests + this runner + PASS/FAIL table
 ```
+(`sudo ./evaluation/ubuntu_runner/run_evaluation.sh` runs just the Mininet runner.)
 The launcher finds `ryu-manager` and a Python with Mininet even though sudo resets PATH (it looks at PATH,
 `~/topic23-venv`, pyenv). Check the environment first, without running anything:
 `sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh` (checks ryu-manager, OVS tools and daemon, netem and

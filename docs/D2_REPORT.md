@@ -1,130 +1,83 @@
-# Network Time Synchronization System — D2 Report
+# Network Time Synchronization over SDN: D2 Report
 
-## 1. D2 Scope
+All tables between `GEN` markers are written by `evaluation/code/fill_report.py` from the files in
+`evaluation/results/actual_sdn_results/`. A row that says `pending` has no result file yet; no number here is typed by hand.
 
-D2 extends D1 from a working socket/SDN prototype into a tested system with
-dynamic SDN behavior, challenging conditions, performance measurements and
-recovery testing.
+## 1. Scope
 
-## 2. Complete Application Functionality
+D1 (moved to `sandbox/d1/`) was a socket/SDN prototype. D2 adds measured behaviour under delay, congestion and failure,
+a controller that reacts to congestion, and an OpenFlow-to-queue path (QoS) that protects the sync traffic.
 
-The application supports:
+## 2. System
 
-- reference UDP time server
-- multiple synchronization clients
-- four timestamp exchange
-- RTT calculation
-- clock-offset estimation
-- simulated client clock skew
-- controlled network delay
-- synchronization flow installation
-- background UDP traffic
-- controller monitoring
-- dynamic synchronization-flow priority
-- failure and recovery testing
+- **Server** (h1, `10.0.0.1:5000`) and **clients** (h2 skew +100 ms, h3 skew -50 ms): four-timestamp exchange,
+  `REQ|seq|T1` / `REP|seq|T1|T2|T3`. T2 (server) and T4 (client) are kernel receive timestamps (`SO_TIMESTAMPNS`); every
+  fallback to user-space time is counted and printed. The client keeps reading until a per-sample deadline so a late reply
+  to an earlier request does not cost the next sample.
+- **Topology:** h1 on a 20 Mbit link (the bottleneck), h2/h3/h4 on 100 Mbit. Load goes h4 to h1 UDP/6000 and shares the
+  `s1 -> h1` egress queue with the sync requests.
+- **Controller** (`controller/d2_adaptive_controller.py`): learning switch; sync flows (UDP/5000) at priority 100;
+  congestion detected from OpenFlow port 1 only (enter at 15 Mbit/s, leave after 2 polls at or below 8 Mbit/s); on detection it
+  pushes priority 200 at once and reverts when the load clears. With `D2_QOS=on`, sync flows toward port 1 carry `set_queue:1`.
+- **QoS** (`mininet/d2_qos.py`): OVS linux-htb on `s1-eth1`, total 20 Mbit; queue 0 default, queue 1 for sync with a 2 Mbit
+  minimum and higher priority. Host-side shaping is untouched, so netem still works.
 
-## 3. Dynamic SDN Functionality
+## 3. Results
 
-The D2 Ryu controller periodically requests OpenFlow port statistics.
+Environment:
 
-It compares traffic volume with a threshold.
+<!-- GEN:environment -->
+pending
+<!-- /GEN:environment -->
 
-Policy:
+### 3.1 Per-test performance
 
-```text
-Normal traffic:
-    sync priority = 100
+<!-- GEN:performance -->
+pending
+<!-- /GEN:performance -->
 
-High traffic:
-    sync priority = 200
-```
+### 3.2 Baseline versus SDN-controlled (QoS off versus on)
 
-The controller also classifies background UDP traffic on port 6000 separately
-from synchronization UDP traffic on port 5000.
+"Baseline" is the same load with the controller's priority policy but no queue (QoS off); "SDN-controlled" adds the
+QoS queue and `set_queue` (QoS on). Same load, same client, same run.
 
-Evidence:
+<!-- GEN:qos -->
+pending
+<!-- /GEN:qos -->
 
-```text
-DYNAMIC SDN: ...
-DYNAMIC SYNC FLOW: ... priority=200
-BACKGROUND TRAFFIC: ...
-```
+Verdicts printed by the runner:
 
-This demonstrates controller behavior based on observed network conditions.
+<!-- GEN:verdicts -->
+pending
+<!-- /GEN:verdicts -->
 
-## 4. Challenging Scenarios
+### 3.3 Error reduction: mean versus NTP-style min-RTT filter (8 samples)
 
-### A. Congestion
-A background UDP generator sends high-rate traffic while synchronization runs.
+<!-- GEN:errors -->
+pending
+<!-- /GEN:errors -->
 
-### B. Added delay
-Linux `netem` adds controlled delay to the client interface.
+## 4. Reading the results
 
-### C. Server failure and recovery
-The time server is stopped, the client experiences timeouts, and the server
-is restarted. Successful synchronization after restart demonstrates recovery.
+Write this section after the final run, from the tables above: what the QoS-off legs show, what QoS changed, how the offset
+error follows the one-directional queue (error is about half the request-direction queue delay), and what the min-RTT filter
+does and does not help.
 
-## 5. Performance Evaluation
+## 5. Replay page
 
-Collect:
+`evaluation/code/build_replay.py` writes `replay.html` next to the results: sync RTT and offset error with QoS off versus on,
+the controller policy timeline and the flow table with priorities. It is one offline file.
 
-- average RTT
-- average estimated offset
-- mean absolute offset error
-- successful samples
-- timeout/loss count
+## 6. Reproducing
 
-Run at least these conditions:
+`sudo ./run_d2.sh` (see `evaluation/docs/EVALUATION_COMMANDS.md`). Needs Ubuntu, Mininet, Open vSwitch, Ryu, iperf.
 
-| Test | Condition | Skew | Samples | Avg RTT | Avg Offset | Error | Timeouts |
-|---|---|---:|---:|---:|---:|---:|---:|
-| P1 | Normal | +100 ms | 20 | | | | |
-| P2 | 50 ms delay | +100 ms | 20 | | | | |
-| P3 | Background load | +100 ms | 20 | | | | |
-| P4 | Load + delay | +100 ms | 20 | | | | |
+## 7. Limitations
 
-Use actual measurements from the Ubuntu/Mininet run.
-
-## 6. Baseline vs SDN-Controlled Comparison
-
-For a defensible comparison:
-
-### Baseline
-Run the same synchronization test before applying the SDN-specific
-priority policy or with only normal forwarding.
-
-### SDN-controlled
-Run it with the D2 controller and verify the UDP/5000 priority flow.
-
-Compare the measured RTT, error and timeouts under the same traffic condition.
-
-Do not invent values; record the values produced by the experiments.
-
-## 7. Reproducibility
-
-Required:
-
-- Ubuntu
-- Mininet
-- Open vSwitch
-- Ryu
-- project source
-- controller command
-- topology command
-- experiment commands
-
-## 8. D2 Rubric Mapping
-
-| D2 item | Evidence |
-|---|---|
-| Complete Application Functionality (4) | Server/client + multi-client + calculations |
-| Dynamic SDN Functionality (6) | Port monitoring + dynamic priority + traffic classification |
-| Challenging Scenario / Robustness (4) | congestion + delay + failure/recovery |
-| Performance Evaluation & Comparison (5) | controlled experiments + baseline comparison |
-| Documentation, Final Demo & Viva (6) | D1/D2 reports + demo script + viva Q&A |
-
-## 9. Limitations
-
-This remains an educational prototype rather than production NTP. The dynamic
-controller uses a simple traffic-volume threshold and does not claim to be a
-complete enterprise routing/QoS system.
+- Educational prototype, not production NTP; no clock is disciplined.
+- 20 samples per test and one run per condition: run-to-run variation is not measured.
+- One bottleneck, one switch, one QoS port; the queue protects sync only toward h1.
+- Congestion detection is a rate threshold on port 1 with fixed values; the QoS minimum rate and queue priority were not tuned.
+- Only the request direction queues, so the offset error under load is asymmetry, not noise; the min-RTT filter reduces it a
+  little when some samples see a shorter queue and cannot remove a standing queue.
+- Kernel timestamps remove user-space wake-up delay only; on loopback this was under a microsecond.

@@ -42,7 +42,9 @@ Estimated offset and RTT are reported; the system clock is never changed.
 | Path | What |
 |---|---|
 | `controller/d2_adaptive_controller.py` | Ryu D2 controller |
-| `mininet/d2_topology.py` | Interactive D2 topology (h1..h4, s1) |
+| `mininet/d2_topology.py`, `d2_qos.py` | Interactive topology; OVS QoS queues |
+| `run_d2.sh` | One command: tests, run, PASS/FAIL table |
+| `tests/` | Sandbox tests (no root) |
 | `server_client/` | `time_server.py`, `load_generator.py` |
 | `evaluation/` | Evaluator, automated runner, results, result status |
 | `docs/D2_REPORT.md` | Report |
@@ -67,15 +69,25 @@ Results go to `evaluation/results/actual_sdn_results/` (start with
 show. Set `EVAL_RYU_MANAGER=~/topic23-venv/bin/ryu-manager` if `ryu-manager` is
 not found.
 
-## Manual demo
+## Run everything
 
-1. `ryu-manager controller/d2_adaptive_controller.py --ofp-tcp-listen-port 6653`
-2. `sudo python3 mininet/d2_topology.py`
-3. `mininet> h1 python3 server_client/time_server.py &`
-4. Clients: `h2 python3 evaluation/code/robustness_eval.py --test baseline --server 10.0.0.1 --skew-ms 100 --csv /tmp/h2.csv`
-5. Load from h4 and watch the Ryu log and `sh ovs-ofctl -O OpenFlow13 dump-flows s1`.
+```bash
+sudo ./run_d2.sh        # sandbox tests, Mininet/SDN run, PASS/FAIL table; exit 0 only if nothing failed
+```
 
-Full command list: `evaluation/docs/EVALUATION_COMMANDS.md`.
+## Demo steps
+
+1. `sudo ./run_d2.sh --out /tmp/d2demo` (a few minutes). Show the PASS/FAIL table.
+2. `python3 evaluation/code/build_replay.py /tmp/d2demo` and open `/tmp/d2demo/replay.html`: sync RTT with QoS off versus on,
+   the controller policy timeline, the flow table (priority 200, `set_queue:1`).
+3. Or by hand: controller with `D2_QOS=on`, `sudo python3 mininet/d2_topology.py --qos on`, then the commands in
+   `evaluation/docs/EVALUATION_COMMANDS.md` (`dump-flows s1`, `tc -s class show dev s1-eth1`).
+
+## QoS in one paragraph
+
+OpenFlow priority only orders flow lookups. To protect sync traffic the switch needs a queue: OVS linux-htb on `s1-eth1`
+(sync queue with a 2 Mbit minimum, 20 Mbit total) and a `set_queue:1` action on sync flows. The controller detects congestion
+from port 1 only and pushes priority 200 immediately.
 
 ## Limitations
 

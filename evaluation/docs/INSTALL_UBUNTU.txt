@@ -9,8 +9,8 @@ eventlet). The launcher looks for ryu-manager on PATH, then in ~/topic23-venv an
 Check the environment (no test is run):
   sudo env EVAL_CHECK_ONLY=1 ./evaluation/ubuntu_runner/run_evaluation.sh
 
-Run, from the repository root:
-  sudo ./evaluation/ubuntu_runner/run_evaluation.sh
+Run everything, from the repository root:
+  sudo ./run_d2.sh
 
 Results: evaluation/results/actual_sdn_results/ (SUMMARY.txt first). The folder is wiped and rewritten each run.
 

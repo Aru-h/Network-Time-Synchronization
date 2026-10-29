@@ -105,7 +105,7 @@ def verdicts(d):
     if not p.exists():
         return PENDING
     lines = [l for l in p.read_text().splitlines()
-             if re.match(r"(QOS_verdict|QOS_setup|P[0-9a-z_]+)\s", l) and not l[0].isspace()]
+             if re.match(r"(QOS_verdict\w*|QOS_setup|P[0-9a-z_]+)\s", l) and not l[0].isspace()]
     return "```text\n" + "\n".join(l[:200] for l in lines) + "\n```"
 
 
