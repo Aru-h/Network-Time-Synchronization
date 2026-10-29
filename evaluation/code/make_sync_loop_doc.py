@@ -20,6 +20,21 @@ def freq_estimate(d, name):
     return f"{float(m.group(1)):+.1f}" if m else "-"
 
 
+SETUP_ROWS = ["sandbox: test_agefilter", "sandbox: test_sync_loop", "sandbox: test_sync_loop_check", "environment probe",
+              "mininet run (exit status)"]
+
+
+def setup_rows(d):
+    """The five setup checks of a run, with the verdicts the run itself recorded in its SUMMARY.txt (written by the wrapper)."""
+    p = Path(d) / "SUMMARY.txt"
+    text = p.read_text() if p.exists() else ""
+    out = []
+    for name in SETUP_ROWS:
+        m = re.search(r"^" + re.escape(name) + r"\s+(PASS|FAIL)\b", text, re.M)
+        out.append((name, m.group(1) if m else "SKIP", ""))
+    return out
+
+
 def run_table(d):
     rows = ["| Leg | Setting | Role | Steps (expected) | Backwards | Max wall-vs-monotonic jump (ms) | First-poll error (ms) | Steady mean \\|error\\| (ms) | Steady max \\|error\\| (ms) | Bound max (ms) | Polls over bound | Within bound | Worst excess (ms) | Verdict, original strict rule | Verdict, 95% rule |",
             "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"]
@@ -39,11 +54,8 @@ def run_table(d):
                     f"{a['first_err']:.1f} | {a['mean_err']:.4f} | {a['max_err']:.4f} | {a['max_bound']:.4f} | "
                     f"{a['violations']}/{a['steady']} | {a['within'] * 100:.1f}% | {a['worst_excess']:.4f} | {res_s[name]} | {res[name]} |")
     cmp_ = [r for r in legs if r[0] == "S5 < S4 error"][0]
-    def cnt(L):
-        c = {k: sum(1 for _, r, _ in L if r == k) for k in ("PASS", "FAIL", "SKIP", "INFO", "INVALID")}
-        c["SKIP"] += c["INVALID"]                                       # INVALID is counted as SKIP
-        return c
-    return "\n".join(rows), cmp_, (cnt(strict), cnt(legs)), an
+    setup = setup_rows(d)
+    return "\n".join(rows), cmp_, (chk.count(setup + strict), chk.count(setup + legs)), an, setup, legs
 
 
 def main():
@@ -145,15 +157,56 @@ strict re-evaluation of run 3 is shown for comparison. Run 3 was started twice: 
 controller probe (a `telnet` decode error while Ryu was starting) before any leg ran, so it produced no data; the runner now waits for the
 controller with a plain socket connect and the second attempt is run 3.
 """]
+    # one table of every counted check for every run, one counting rule
+    names = SETUP_ROWS + ["S1_slew", "S2_step", "S3_drift", "S5_load_qoson", "S5 < S4 error"]
+    verdicts = {}
     for p in runs:
-        table, cmp_, counts, _ = tabs[p.name]
+        _t, _c, _cn, _an, setup, legs = tabs[p.name]
+        verdicts[p.name] = {n: r for n, r, _ in setup + legs}
+    rec = ["| # | Counted check | " + " | ".join(p.name for p in runs) + " |", "|---:|---|" + "---|" * len(runs)]
+    for i, nme in enumerate(names, 1):
+        rec.append(f"| {i} | {nme} | " + " | ".join(verdicts[p.name].get(nme, "SKIP") for p in runs) + " |")
+    tot = {p.name: tabs[p.name][5] for p in runs}
+    cn = {p.name: chk.count(tabs[p.name][4] + tabs[p.name][5]) for p in runs}
+    for label, key in (("PASS", "PASS"), ("FAIL", "FAIL"), ("SKIP", "SKIP")):
+        rec.append(f"| | **{label}** | " + " | ".join(str(cn[p.name][key]) for p in runs) + " |")
+    rec.append("| | **Total counted** | " + " | ".join(str(cn[p.name]["PASS"] + cn[p.name]["FAIL"] + cn[p.name]["SKIP"]) for p in runs) + " |")
+    ro = ["| Report-only leg (never counted) | " + " | ".join(p.name for p in runs) + " |", "|---|" + "---|" * len(runs)]
+    for nme in ("S3f_drift_freq", "S4_load_qosoff", "S6_idle_cpubusy"):
+        ro.append(f"| {nme} | " + " | ".join(verdicts[p.name].get(nme, "not run") for p in runs) + " |")
+    strict_fail = {}
+    for p in runs:
+        sl, _ = chk.evaluate(p, strict=True)
+        strict_fail[p.name] = [n for n, r, _ in sl if r == "FAIL" and n not in chk.REPORT_ONLY]
+    strict_note = ("Under the original strict rule (every steady poll within the bound; runs 1 and 2 were judged by it at the time, runs 3 and 4 only "
+                   "re-evaluated offline) the FAIL legs would be: " + "; ".join(f"{k}: {', '.join(v) if v else 'none'}" for k, v in strict_fail.items())
+                   + ". See the per-run tables for the excesses.")
+    parts.append(f"""### All counted checks, all runs (final 95% rule, validity gates applied)
+
+**Counting rule, the same for every run.** There are {chk.COUNTED_CHECKS} counted checks: the 5 setup rows (3 sandbox test files, the environment
+probe, the runner's exit status), S1_slew, S2_step, S3_drift, S5_load_qoson and "S5 < S4 error". Each counts exactly once as PASS, FAIL or
+SKIP, so PASS + FAIL + SKIP is {chk.COUNTED_CHECKS} in every run. An INVALID counted check is counted as SKIP. Report-only legs (S3f, S4, S6) are shown
+but never counted, whatever their result, so an INVALID S4 changes no count by itself; it makes only the check that depends on it,
+"S5 < S4 error", a SKIP. The setup verdicts are the ones each run recorded in its own `SUMMARY.txt`; the sandbox test files had 7, 13 and 5 tests
+in runs 1 and 2, 7, 13 and 7 in run 3, and 7, 14 and 12 in run 4 (tests were added between runs), which does not change what counts as one check.
+Run 3's earlier "PASS 4, FAIL 0, SKIP 2" counted the INVALID S4 leg as well as the dependent comparison, and counted only the leg rows;
+under this rule run 3 is PASS 9, FAIL 0, SKIP 1.
+
+{chr(10).join(rec)}
+
+{chr(10).join(ro)}
+
+Runs 1 and 2 had no S6 leg, and runs 1 to 3 did not record the clock-step column. {strict_note}
+
+""")
+    for p in runs:
+        table, cmp_, counts, _, _setup, _legs = tabs[p.name]
         parts.append(f"""### {p.name}
 
 {table}
 
 S5 < S4 check: {cmp_[1]} ({cmp_[2]}).
-Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
-add 5 PASS): original strict rule PASS {counts[0]['PASS']}, FAIL {counts[0]['FAIL']}, SKIP {counts[0]['SKIP']} (INVALID {counts[0]['INVALID']}); 95% rule PASS {counts[1]['PASS']}, FAIL {counts[1]['FAIL']}, SKIP {counts[1]['SKIP']} (INVALID {counts[1]['INVALID']}); report-only {counts[1]['INFO']}.
+Counted checks (rule below): 95% rule PASS {counts[1]['PASS']}, FAIL {counts[1]['FAIL']}, SKIP {counts[1]['SKIP']} = {counts[1]['PASS'] + counts[1]['FAIL'] + counts[1]['SKIP']}; original strict rule PASS {counts[0]['PASS']}, FAIL {counts[0]['FAIL']}, SKIP {counts[0]['SKIP']} = {counts[0]['PASS'] + counts[0]['FAIL'] + counts[0]['SKIP']}; report-only legs shown, not counted: {counts[1]['INFO']}.
 """)
     obs = ["## Observations that are not explained"]
     rows_o = ["| Run | S1 idle (demo cap) | S2 idle | S6 idle + CPU-busy | S5 loaded, QoS on |", "|---|---:|---:|---:|---:|"]

@@ -182,6 +182,37 @@ class CheckTest(unittest.TestCase):
         write_load(self.d, "S5_load_qoson", [19.4] * 70, alive=False)
         self.assertEqual(self.res()["S5 < S4 error"][1], "S5 INVALID")
 
+    def test_one_counting_rule_gives_the_same_total_in_every_run(self):
+        setup = [("sandbox: a", "PASS", ""), ("sandbox: b", "PASS", ""), ("sandbox: c", "PASS", ""),
+                 ("environment probe", "PASS", ""), ("mininet run (exit status)", "PASS", "")]
+        def totals(d):
+            legs, _ = chk.evaluate(d)
+            n = chk.count(setup + legs)
+            return n, n["PASS"] + n["FAIL"] + n["SKIP"]
+
+        def full(good_s4=True, with_s6=True):
+            d = tempfile.mkdtemp()
+            for name in ("S1_slew", "S2_step", "S3_drift", "S3f_drift_freq"):
+                write(d, name, good(first_step=name == "S2_step"))
+            for name in ("S4_load_qosoff", "S5_load_qoson"):
+                write(d, name, good(n=60, err=0.01 if "S5" in name else 17.0, frtt=0.05 if "S5" in name else 34.0, first_step=True))
+                write_load(d, name, [19.4] * 70)
+            if not good_s4:
+                write_load(d, "S4_load_qosoff", [19.4] * 40 + [0.0] * 30)                 # the run 3 situation
+            if with_s6:
+                write(d, "S6_idle_cpubusy", good(first_step=True))
+            return d
+        n4, t4 = totals(full())
+        n3, t3 = totals(full(good_s4=False))
+        n1, t1 = totals(full(with_s6=False))                                              # runs 1 and 2 had no S6
+        self.assertEqual((t4, t3, t1), (chk.COUNTED_CHECKS,) * 3)
+        self.assertEqual((n4["PASS"], n4["FAIL"], n4["SKIP"]), (10, 0, 0))
+        self.assertEqual((n3["PASS"], n3["FAIL"], n3["SKIP"]), (9, 0, 1))                 # only the S4-dependent check is SKIP
+        self.assertEqual(n3["INVALID"], 0)                                                # the INVALID S4 itself is report-only: not counted
+        self.assertEqual((n1["PASS"], n1["FAIL"], n1["SKIP"]), (10, 0, 0))
+        self.assertEqual(n4["INFO"], 3)
+        self.assertEqual(n1["INFO"], 2)
+
     def test_head_start_matches_the_runner(self):
         src = (ROOT / "evaluation" / "ubuntu_runner" / "run_sync_loop.py").read_text()
         self.assertIn(f"LOAD_HEAD_START_S = {chk.LOAD_HEAD_START_S}", src.replace("LOAD_MBPS, LOAD_HEAD_START_S = rt.OVER_LOAD_MBPS, ", "LOAD_HEAD_START_S = "))

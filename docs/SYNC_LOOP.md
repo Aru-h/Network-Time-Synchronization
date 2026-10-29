@@ -79,6 +79,43 @@ strict re-evaluation of run 3 is shown for comparison. Run 3 was started twice: 
 controller probe (a `telnet` decode error while Ryu was starting) before any leg ran, so it produced no data; the runner now waits for the
 controller with a plain socket connect and the second attempt is run 3.
 
+### All counted checks, all runs (final 95% rule, validity gates applied)
+
+**Counting rule, the same for every run.** There are 10 counted checks: the 5 setup rows (3 sandbox test files, the environment
+probe, the runner's exit status), S1_slew, S2_step, S3_drift, S5_load_qoson and "S5 < S4 error". Each counts exactly once as PASS, FAIL or
+SKIP, so PASS + FAIL + SKIP is 10 in every run. An INVALID counted check is counted as SKIP. Report-only legs (S3f, S4, S6) are shown
+but never counted, whatever their result, so an INVALID S4 changes no count by itself; it makes only the check that depends on it,
+"S5 < S4 error", a SKIP. The setup verdicts are the ones each run recorded in its own `SUMMARY.txt`; the sandbox test files had 7, 13 and 5 tests
+in runs 1 and 2, 7, 13 and 7 in run 3, and 7, 14 and 12 in run 4 (tests were added between runs), which does not change what counts as one check.
+Run 3's earlier "PASS 4, FAIL 0, SKIP 2" counted the INVALID S4 leg as well as the dependent comparison, and counted only the leg rows;
+under this rule run 3 is PASS 9, FAIL 0, SKIP 1.
+
+| # | Counted check | run1 | run2 | run3 | run4 |
+|---:|---|---|---|---|---|
+| 1 | sandbox: test_agefilter | PASS | PASS | PASS | PASS |
+| 2 | sandbox: test_sync_loop | PASS | PASS | PASS | PASS |
+| 3 | sandbox: test_sync_loop_check | PASS | PASS | PASS | PASS |
+| 4 | environment probe | PASS | PASS | PASS | PASS |
+| 5 | mininet run (exit status) | PASS | PASS | PASS | PASS |
+| 6 | S1_slew | PASS | PASS | PASS | PASS |
+| 7 | S2_step | PASS | PASS | PASS | PASS |
+| 8 | S3_drift | PASS | PASS | PASS | PASS |
+| 9 | S5_load_qoson | PASS | PASS | PASS | PASS |
+| 10 | S5 < S4 error | PASS | PASS | SKIP | PASS |
+| | **PASS** | 10 | 10 | 9 | 10 |
+| | **FAIL** | 0 | 0 | 0 | 0 |
+| | **SKIP** | 0 | 0 | 1 | 0 |
+| | **Total counted** | 10 | 10 | 10 | 10 |
+
+| Report-only leg (never counted) | run1 | run2 | run3 | run4 |
+|---|---|---|---|---|
+| S3f_drift_freq | INFO | INFO | INFO | INFO |
+| S4_load_qosoff | INFO | INFO | INVALID | INFO |
+| S6_idle_cpubusy | not run | not run | INFO | INFO |
+
+Runs 1 and 2 had no S6 leg, and runs 1 to 3 did not record the clock-step column. Under the original strict rule (every steady poll within the bound; runs 1 and 2 were judged by it at the time, runs 3 and 4 only re-evaluated offline) the FAIL legs would be: run1: S1_slew; run2: S2_step; run3: none; run4: S1_slew. See the per-run tables for the excesses.
+
+
 ### run1
 
 | Leg | Setting | Role | Steps (expected) | Backwards | Max wall-vs-monotonic jump (ms) | First-poll error (ms) | Steady mean \|error\| (ms) | Steady max \|error\| (ms) | Bound max (ms) | Polls over bound | Within bound | Worst excess (ms) | Verdict, original strict rule | Verdict, 95% rule |
@@ -91,8 +128,7 @@ controller with a plain socket connect and the second attempt is run 3.
 | S5_load_qoson | 30 Mbit load, QoS on, skew 500 ms, 90 s | PASS/FAIL | 1 (1) | 0 | not recorded | 500.0 | 0.0080 | 0.0128 | 0.0384 | 0/45 | 100.0% | 0.0000 | PASS | PASS |
 
 S5 < S4 check: PASS (steady mean |true_error| QoS on 0.0080 ms vs QoS off 15.9644 ms (max 0.0128 vs 18.0385 ms)).
-Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
-add 5 PASS): original strict rule PASS 4, FAIL 1, SKIP 0 (INVALID 0); 95% rule PASS 5, FAIL 0, SKIP 0 (INVALID 0); report-only 2.
+Counted checks (rule below): 95% rule PASS 10, FAIL 0, SKIP 0 = 10; original strict rule PASS 9, FAIL 1, SKIP 0 = 10; report-only legs shown, not counted: 2.
 
 ### run2
 
@@ -106,8 +142,7 @@ add 5 PASS): original strict rule PASS 4, FAIL 1, SKIP 0 (INVALID 0); 95% rule P
 | S5_load_qoson | 30 Mbit load, QoS on, skew 500 ms, 90 s | PASS/FAIL | 1 (1) | 0 | not recorded | 500.0 | 0.0087 | 0.0129 | 0.0529 | 0/45 | 100.0% | 0.0000 | PASS | PASS |
 
 S5 < S4 check: PASS (steady mean |true_error| QoS on 0.0087 ms vs QoS off 15.2103 ms (max 0.0129 vs 16.2389 ms)).
-Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
-add 5 PASS): original strict rule PASS 4, FAIL 1, SKIP 0 (INVALID 0); 95% rule PASS 5, FAIL 0, SKIP 0 (INVALID 0); report-only 2.
+Counted checks (rule below): 95% rule PASS 10, FAIL 0, SKIP 0 = 10; original strict rule PASS 9, FAIL 1, SKIP 0 = 10; report-only legs shown, not counted: 2.
 
 ### run3
 
@@ -122,8 +157,7 @@ add 5 PASS): original strict rule PASS 4, FAIL 1, SKIP 0 (INVALID 0); 95% rule P
 | S5_load_qoson | 30 Mbit load, QoS on, skew 500 ms, 90 s | PASS/FAIL | 1 (1) | 0 | not recorded | 500.0 | 0.0071 | 0.0114 | 0.0400 | 0/45 | 100.0% | 0.0000 | PASS | PASS |
 
 S5 < S4 check: SKIP (S4 INVALID).
-Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
-add 5 PASS): original strict rule PASS 4, FAIL 0, SKIP 2 (INVALID 1); 95% rule PASS 4, FAIL 0, SKIP 2 (INVALID 1); report-only 2.
+Counted checks (rule below): 95% rule PASS 9, FAIL 0, SKIP 1 = 10; original strict rule PASS 9, FAIL 0, SKIP 1 = 10; report-only legs shown, not counted: 3.
 
 ### run4
 
@@ -138,8 +172,7 @@ add 5 PASS): original strict rule PASS 4, FAIL 0, SKIP 2 (INVALID 1); 95% rule P
 | S5_load_qoson | 30 Mbit load, QoS on, skew 500 ms, 90 s | PASS/FAIL | 1 (1) | 0 | 0.010 | 500.0 | 0.0087 | 0.0140 | 0.0455 | 0/45 | 100.0% | 0.0000 | PASS | PASS |
 
 S5 < S4 check: PASS (steady mean |true_error| QoS on 0.0087 ms vs QoS off 16.1691 ms (max 0.0140 vs 16.9353 ms)).
-Counts on the leg rows and the S5 < S4 row (the 5 setup rows, 3 sandbox tests + environment probe + runner exit, were PASS in every run and
-add 5 PASS): original strict rule PASS 4, FAIL 1, SKIP 0 (INVALID 0); 95% rule PASS 5, FAIL 0, SKIP 0 (INVALID 0); report-only 3.
+Counted checks (rule below): 95% rule PASS 10, FAIL 0, SKIP 0 = 10; original strict rule PASS 9, FAIL 1, SKIP 0 = 10; report-only legs shown, not counted: 3.
 
 ## Observations that are not explained
 

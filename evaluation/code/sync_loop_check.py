@@ -199,6 +199,29 @@ def evaluate(d, strict=False):
     return out, an
 
 
+REPORT_ONLY = {name for name, _d, _dr, _st, role in LEGS if role == "INFO"}
+# The counted checks of every run: the 5 setup rows (3 sandbox test files, environment probe, runner exit status),
+# S1_slew, S2_step, S3_drift, S5_load_qoson and "S5 < S4 error" = 10. Report-only legs are never counted.
+COUNTED_CHECKS = 10
+
+
+def count(rows):
+    """THE counting rule, the same for every run. rows are (name, result, detail).
+    - a report-only leg (S3f, S4, S6) is shown but never counted, whatever its result (INFO, INVALID or SKIP): bucket 'INFO';
+    - any other check counts once: PASS, FAIL or SKIP; an INVALID check is counted as SKIP (and also tallied in 'INVALID').
+    PASS + FAIL + SKIP is therefore the number of counted checks, whatever happened in the run."""
+    n = dict(PASS=0, FAIL=0, SKIP=0, INFO=0, INVALID=0)
+    for name, res, _detail in rows:
+        if name in REPORT_ONLY:
+            n["INFO"] += 1
+        elif res == "INVALID":
+            n["SKIP"] += 1
+            n["INVALID"] += 1
+        elif res in ("PASS", "FAIL", "SKIP"):
+            n[res] += 1
+    return n
+
+
 def read_steps(path):
     rows = []
     if path and Path(path).exists():
@@ -214,10 +237,10 @@ def render(rows):
     lines = ["=" * 110, f"{'CHECK':<{w}}  RESULT  DETAIL", "-" * 110]
     for name, res, detail in rows:
         lines.append(f"{name:<{w}}  {res:<6}  {detail[:110 - w - 10]}")
-    n = {k: sum(1 for r in rows if r[1] == k) for k in ("PASS", "FAIL", "SKIP", "INFO", "INVALID")}
-    n["SKIP"] += n["INVALID"]                                           # an INVALID leg is counted as SKIP, never PASS
-    lines += ["-" * 110, f"PASS {n['PASS']}   FAIL {n['FAIL']}   SKIP {n['SKIP']} (of which INVALID {n['INVALID']})   "
-              f"(INFO {n['INFO']}: report-only legs, not counted)",
+    n = count(rows)                                                     # an INVALID counted check is a SKIP, never a PASS
+    total = n["PASS"] + n["FAIL"] + n["SKIP"]
+    lines += ["-" * 110, f"PASS {n['PASS']}   FAIL {n['FAIL']}   SKIP {n['SKIP']} (of which INVALID {n['INVALID']})   = {total} counted checks   "
+              f"(INFO {n['INFO']}: report-only legs, never counted)",
               "OVERALL: " + ("FAIL" if n["FAIL"] else f"INCOMPLETE ({n['SKIP']} SKIP: no data)" if n["SKIP"] else "PASS"), "=" * 110]
     return "\n".join(lines), n
 
