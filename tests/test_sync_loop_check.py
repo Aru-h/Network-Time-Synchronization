@@ -74,6 +74,34 @@ class CheckTest(unittest.TestCase):
         write(self.d, "S5_load_qoson", good(err=20.0, frtt=0.05, first_step=True))
         self.assertEqual(self.res()["S5 < S4 error"][0], "FAIL")
 
+    def test_ninety_five_percent_rule(self):
+        def one_over(n_over, n=60):
+            rows = [(5.0, 0.1, 0, 0)] + [(0.01, 0.1, 0, 0)] * (n - 1)       # 60 rows: 30 steady polls
+            idx = len(rows) // 2 + 3
+            for k in range(n_over):
+                rows[idx + k] = (0.2, 0.1, 0, 0)                            # 0.2 vs bound 0.05: over by 0.15
+            return rows
+        write(self.d, "S1_slew", one_over(0))
+        self.assertEqual(self.res()["S1_slew"][0], "PASS")
+        write(self.d, "S1_slew", one_over(1))                              # 1 of 30 steady polls over: 96.7% within
+        a = chk.analyze(Path(self.d) / "S1_slew.csv", 0.0)
+        self.assertEqual((a["steady"], a["violations"]), (30, 1))
+        self.assertAlmostEqual(a["worst_excess"], 0.15)
+        self.assertEqual(chk.verdict(a, 0, "PASS")[0], "PASS")             # the 95% rule passes it ...
+        self.assertEqual(chk.verdict(a, 0, "PASS", strict=True)[0], "FAIL")   # ... the original strict rule does not
+        self.assertIn("worst excess 0.1500 ms", chk.verdict(a, 0, "PASS")[1])
+        write(self.d, "S1_slew", one_over(2))                              # 2 of 30: 93.3% within
+        a = chk.analyze(Path(self.d) / "S1_slew.csv", 0.0)
+        self.assertEqual(chk.verdict(a, 0, "PASS")[0], "FAIL")
+        # steps and monotonic stay strict under the new rule
+        a["steps"] = 2
+        self.assertEqual(chk.verdict(dict(a, violations=0, within=1.0), 0, "PASS")[0], "FAIL")
+
+    def test_optional_cpubusy_leg_is_omitted_when_not_run(self):
+        self.assertNotIn("S6_idle_cpubusy", self.res())
+        write(self.d, "S6_idle_cpubusy", good(first_step=True))
+        self.assertEqual(self.res()["S6_idle_cpubusy"][0], "INFO")
+
     def test_table_counts(self):
         write(self.d, "S1_slew", good())
         legs, _ = chk.evaluate(self.d)

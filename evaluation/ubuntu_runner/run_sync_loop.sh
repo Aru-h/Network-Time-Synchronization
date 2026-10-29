@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Sync-loop evaluation on Mininet, with its own PASS / FAIL / SKIP table and exit code.
 #   sudo ./evaluation/ubuntu_runner/run_sync_loop.sh [--out DIR] [--sandbox-only]
-# Runs the sandbox tests for the sync loop, probes the environment, runs legs S1..S5 (see run_sync_loop.py) and
+# Runs the sandbox tests for the sync loop, probes the environment, runs legs S1..S5 and S6 (see run_sync_loop.py) and
 # prints the table (exit 1 if any check FAILs; SKIP means no data and is never a PASS). Results go to --out
 # (default evaluation/results/sync_loop), never under actual_sdn_results. EVAL_RYU_MANAGER / EVAL_PYTHON override tools.
 set -uo pipefail

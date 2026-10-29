@@ -6,6 +6,8 @@ h2 runs server_client/sync_loop.py against the unchanged time server on h1, once
   S2_step         skew 500 ms, default 500 ppm cap, 60 s: exactly one step, then slew only
   S3_drift        50 ppm oscillator drift, 60 s
   S3f_drift_freq  the same with --freq-compensate (report only)
+  S6_idle_cpubusy skew 500 ms, 60 s, no network load, QoS off, with CPU-busy background processes (report only, optional):
+                  tests only whether keeping the CPUs awake changes the idle accuracy; it does not name a cause
   S4_load_qosoff  30 Mbit load h4 -> h1 on the 20 Mbit link, QoS off, skew 500 ms, 90 s (report only)
   S5_load_qoson   the same with the OVS QoS queue and set_queue (controller restarted with D2_QOS=on)
 Results go to --out (default evaluation/results/sync_loop); nothing is written under actual_sdn_results.
@@ -18,6 +20,7 @@ import atexit
 import os
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -51,6 +54,28 @@ def start_load(net, out, name, seconds, use_iperf):
         cli = h4.popen([PY, str(rt.LOADGEN), '10.0.0.1', '--port', str(rt.LOAD_PORT), '--pps', str(pps), '--duration', str(seconds),
                         '--size', '1470'], stdout=open(clog, 'w'), stderr=subprocess.STDOUT)
     return srv, cli
+
+
+class WaitingRemote(RemoteController):
+    """RemoteController whose start-up check is a plain socket connect that waits for the controller. Mininet's own check
+    runs `telnet` and decodes its output; if Ryu answers while it is still starting, the OpenFlow bytes crash the decoder
+    (seen once, in run 3). Same endpoint, no telnet."""
+    def checkListening(self):
+        end = time.time() + 30
+        while time.time() < end:
+            try:
+                socket.create_connection((self.ip, self.port), timeout=1).close()
+                return
+            except OSError:
+                time.sleep(0.5)
+        raise RuntimeError(f'controller not listening on {self.ip}:{self.port}')
+
+
+def start_busy(net, n):
+    """n CPU-bound background processes at low priority (nice 10) on h4: they keep the cores from idling but yield to
+    the sync loop, the server and the switch. No network traffic."""
+    return [net['h4'].popen(['nice', '-n', '10', PY, '-c', 'while True: pass'], stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL) for _ in range(n)]
 
 
 def leg(net, out, name, skew_ms, duration_s, drift_ppm=0.0, max_slew=500, extra=(), load=False, use_iperf=True):
@@ -107,7 +132,7 @@ def main():
         time.sleep(4)
         net = Mininet(topo=rt.TopoC(), switch=partial(OVSSwitch, datapath=dp), controller=None, autoSetMacs=True,
                       autoStaticArp=True, link=rt.ShapedLink)
-        net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6653)
+        net.addController('c0', controller=WaitingRemote, ip='127.0.0.1', port=6653)
         net.start(); time.sleep(3)
         if dp == 'user':
             for h in net.hosts:
@@ -124,6 +149,18 @@ def main():
         leg(net, out, 'S3_drift', 0, 60, drift_ppm=50)
         info('*** S3f drift with frequency compensation\n')
         leg(net, out, 'S3f_drift_freq', 0, 60, drift_ppm=50, extra=('--freq-compensate',))
+        info('*** S6 idle leg with CPU-busy background processes (%d)\n' % (os.cpu_count() or 1))
+        busy = start_busy(net, os.cpu_count() or 1)
+        try:
+            leg(net, out, 'S6_idle_cpubusy', 500, 60)
+        finally:
+            for b in busy:
+                b.terminate()
+            for b in busy:
+                try:
+                    b.wait(timeout=5)
+                except Exception:
+                    b.kill()
         info('*** S4 load, QoS off\n')
         leg(net, out, 'S4_load_qosoff', 500, 90, load=True, use_iperf=bool(iperf))
 
