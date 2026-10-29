@@ -58,8 +58,9 @@ def start_load(net, out, name, seconds, use_iperf):
 
 class WaitingRemote(RemoteController):
     """RemoteController whose start-up check is a plain socket connect that waits for the controller. Mininet's own check
-    runs `telnet` and decodes its output; if Ryu answers while it is still starting, the OpenFlow bytes crash the decoder
-    (seen once, in run 3). Same endpoint, no telnet."""
+    runs `telnet` and decodes its output strictly as UTF-8; once (run 3) that raised UnicodeDecodeError while Ryu was still
+    starting. The source of the byte was not established and the crash was not reproduced on demand. Same endpoint, no telnet,
+    nothing read from the port. (evaluation/ubuntu_runner/run_mininet_tests.py has the same class on d2-tracks.)"""
     def checkListening(self):
         end = time.time() + 30
         while time.time() < end:
