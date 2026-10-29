@@ -30,7 +30,7 @@ Exit status is non-zero if any test FAILED, did not reach its test condition, or
 Results go to evaluation/results/actual_sdn_results/ (or $EVAL_OUT_DIR, which development runs use so the
 committed results are not replaced).
 """
-import atexit, csv, gzip, os, re, shutil, signal, statistics, subprocess, sys, time
+import atexit, csv, gzip, os, re, shutil, signal, socket, statistics, subprocess, sys, time
 from functools import partial
 from pathlib import Path
 from mininet.net import Mininet
@@ -90,6 +90,27 @@ class ShapedLink(TCLink):
         kwargs.setdefault('cls1', ShapedIntf)
         kwargs.setdefault('cls2', ShapedIntf)
         super().__init__(*args, **kwargs)
+
+
+class WaitingRemote(RemoteController):
+    """RemoteController whose start-up check waits for Ryu with a plain socket connect (up to wait_s seconds).
+    Mininet's own check runs `echo A | telnet -e A ip port` in a pty shell and decodes its output as strict UTF-8. It has two
+    weaknesses: if Ryu is not listening yet it only warns and carries on (the run then depends on the fixed sleep), and once,
+    while Ryu was still starting, that decode raised UnicodeDecodeError (byte 0xac in the telnet output). The source of that byte
+    was not established and the crash could not be reproduced on demand. This check never reads or decodes anything from the
+    port: it connects, closes and, if nothing listens in time, raises a clear error."""
+    wait_s = 30
+
+    def checkListening(self):
+        end = time.time() + self.wait_s
+        while time.time() < end:
+            try:
+                socket.create_connection((self.ip, self.port), timeout=1).close()
+                return
+            except OSError:
+                time.sleep(0.5)
+        raise RuntimeError(f'Ryu is not listening on {self.ip}:{self.port} after {self.wait_s} s; '
+                           f'see the controller log (ryu_controller.log) for why it did not start')
 
 
 class TopoC(Topo):
@@ -457,7 +478,7 @@ def main():
         time.sleep(4)
         net = Mininet(topo=TopoC(), switch=partial(OVSSwitch, datapath=dp), controller=None,
                       autoSetMacs=True, autoStaticArp=True, link=ShapedLink)
-        net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6653)
+        net.addController('c0', controller=WaitingRemote, ip='127.0.0.1', port=6653)
         net.start(); time.sleep(3)
         h1, h2 = net['h1'], net['h2']
         if dp == 'user':
