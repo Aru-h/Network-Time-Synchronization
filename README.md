@@ -92,7 +92,15 @@ it. The overload load was nominally 30M but measured about 19.5 Mbit/s at the se
 ![Mean offset error per test](screenshots/02_summary_offset_error.png)
 ![Replay page: load over capacity](screenshots/03_replay_P3b_load_over_capacity_qos_on.png)
 
-More images and the list of live terminal captures: [`screenshots/`](screenshots/README.md).
+Live terminal captures from the Ubuntu VM (D2 topology): client sync with a +100 ms skew, the controller recognising sync
+traffic and installing priority-100 flows, the switch flow table, and the 50 ms delay experiment.
+
+![Client h2 sync output](screenshots/11_client_h2_sync.png)
+![Controller log: sync flow installed](screenshots/13_controller_sync_flow_log.png)
+![Switch flow table](screenshots/14_dump_flows_priority100.png)
+![Delay experiment: baseline vs 50 ms](screenshots/15_delay_experiment.png)
+
+All captures, with the command behind each: [`screenshots/`](screenshots/README.md).
 
 ## Team contributions
 

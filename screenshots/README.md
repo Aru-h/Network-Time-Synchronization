@@ -13,21 +13,19 @@
 These are plots and renderings of the real result files, not photographs of a terminal. Regenerate them any time with the
 commands above.
 
-## Still to capture on the Ubuntu VM (real terminal screenshots)
+## Terminal screenshots from a live run on the Ubuntu VM (2026-11-03)
 
-Take these during a live run and save them here with these names. They are the usual evidence a reviewer looks for.
+D2 topology with the adaptive controller, QoS off. Server on h1, clients on h2 and h3.
 
-| File to add | What to capture | Command |
+| File | What it shows | Command |
 |---|---|---|
-| `10_controller_connected.png` | Controller log showing the switch connected | `ryu-manager controller/d2_adaptive_controller.py --ofp-tcp-listen-port 6653` |
-| `11_client_h2_sync.png` | Client output: per-sample RTT, offset, error and the summary, skew +100 ms | `h2 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100` |
-| `12_client_h3_sync.png` | Second client, skew -50 ms | same with `h3` and `--skew-ms -50` |
-| `13_controller_sync_flow_log.png` | Controller log lines `SOCKET-SDN D2 EVENT` and `DYNAMIC SYNC FLOW ... priority=100` | controller terminal while a client runs |
-| `14_dump_flows_priority100.png` | Priority-100 UDP/5000 flows on the switch | `sh ovs-ofctl -O OpenFlow13 dump-flows s1` (within about 20 s of a client run) |
-| `15_delay_experiment.png` | RTT with and without 50 ms netem | `h2 tc qdisc add dev h2-eth0 root netem delay 50ms`, rerun client, then `h2 tc qdisc del dev h2-eth0 root` |
-| `16_pingall.png` | `pingall` with 0% dropped (run after the sync flows exist) | `pingall` |
-| `17_run_d2_pass_table.png` | The PASS/FAIL table from the automated run | `sudo ./run_d2.sh --out /tmp/d2demo` |
-| `18_dump_flows_congested.png` | Priority-200 sync flows with `set_queue:1` during a QoS-on overload | `sh ovs-ofctl -O OpenFlow13 dump-flows s1` while the load runs |
+| `10_controller_connected.png` | Controller log: app loaded, `D2 SWITCH CONNECTED dpid=1`, then the 1 s `DYNAMIC SDN` monitor lines (port 1 egress about 0 Mbit/s, policy 100) | `ryu-manager controller/d2_adaptive_controller.py --ofp-tcp-listen-port 6653` |
+| `11_client_h2_sync.png` | Client h2, skew +100 ms: per-sample RTT, offset (about -99.8 ms) and error, plus the summary | `h2 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100` |
+| `12_client_h3_sync.png` | Client h3, skew -50 ms: offset about +50.3 ms | same with `h3` and `--skew-ms -50` |
+| `13_controller_sync_flow_log.png` | Controller log: `SOCKET-SDN D2 EVENT` and `DYNAMIC SYNC FLOW ... priority=100` for both directions of both clients (the 1 s monitor lines are filtered out of this view with `grep -v "DYNAMIC SDN"`) | controller terminal while the clients run |
+| `14_dump_flows_priority100.png` | Switch flow table: priority-100 UDP/5000 flows (`idle_timeout=20`) above the priority-0 table-miss entry (cropped to the dump) | `sh ovs-ofctl -O OpenFlow13 dump-flows s1` |
+| `15_delay_experiment.png` | Two runs of the h2 client stacked in one image (a composite of two screenshots; the yellow labels were added): baseline RTT 0.64 ms, error 0.04 ms; with 50 ms netem on h2 RTT 51.6 ms, error 25.5 ms | `h2 tc qdisc add dev h2-eth0 root netem delay 50ms`, rerun the client, then `h2 tc qdisc del dev h2-eth0 root` |
+| `16_pingall.png` | `pingall`, 0% dropped (12/12), run after the sync flows existed | `pingall` |
 
-Tip: crop to the terminal and keep the command line visible in the shot so the evidence is self-explaining. Do not run
-`pingall` before the client (see `docs/ARCHITECTURE.md`, Section 6).
+The PASS/FAIL table of the automated run (`sudo ./run_d2.sh`) is not included as a screenshot; its results are in
+`evaluation/RESULT_STATUS.md` and `docs/D2_REPORT.md`.
