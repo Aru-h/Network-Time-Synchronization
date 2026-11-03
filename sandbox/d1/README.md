@@ -72,7 +72,7 @@ ryu-manager --version
 Terminal 1:
 
 ```bash
-cd topic23_d2_network_time_synchronization
+cd Network-Time-Synchronization
 ryu-manager sandbox/d1/controller/time_sync_controller.py --ofp-tcp-listen-port 6653
 ```
 
@@ -85,7 +85,7 @@ You should see the Ryu controller start.
 Terminal 2:
 
 ```bash
-cd topic23_d2_network_time_synchronization
+cd Network-Time-Synchronization
 sudo python3 sandbox/d1/mininet/time_sync_topology.py
 ```
 
