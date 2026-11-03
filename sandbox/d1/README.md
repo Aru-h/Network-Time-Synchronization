@@ -45,21 +45,17 @@ and Ryu. Windows CMD alone is not sufficient for the Mininet/SDN portion.
 
 ## 1. Install dependencies on Ubuntu
 
-```bash
-sudo apt update
-sudo apt install -y mininet openvswitch-switch python3-pip python3-venv git
-python3 -m pip install --upgrade pip
-python3 -m pip install ryu
-```
-
-If the system Python blocks pip installation, use a virtual environment:
+From the repository root, run the install script. It installs Mininet and Open vSwitch, and creates a virtual
+environment `~/topic23-venv` with a pinned, working Ryu:
 
 ```bash
-python3 -m venv ~/topic23-venv
+./scripts/install_ubuntu.sh
 source ~/topic23-venv/bin/activate
-pip install --upgrade pip
-pip install ryu
 ```
+
+A plain `pip install ryu` can fail on a recent pip or Python, which is why the script pins the versions. Run the
+controller from this virtual environment, and run Mininet with `sudo` (check which Python each one uses if you see import
+errors).
 
 Check:
 
@@ -76,7 +72,7 @@ ryu-manager --version
 Terminal 1:
 
 ```bash
-cd Topic23_D1_Network_Time_Synchronization
+cd topic23_d2_network_time_synchronization
 ryu-manager sandbox/d1/controller/time_sync_controller.py --ofp-tcp-listen-port 6653
 ```
 
@@ -89,7 +85,7 @@ You should see the Ryu controller start.
 Terminal 2:
 
 ```bash
-cd Topic23_D1_Network_Time_Synchronization
+cd topic23_d2_network_time_synchronization
 sudo python3 sandbox/d1/mininet/time_sync_topology.py
 ```
 
@@ -119,18 +115,11 @@ is already installed.
 Inside Mininet:
 
 ```bash
-mininet> h1 python3 /absolute/path/to/server_client/time_server.py --host 10.0.0.1 --port 5000
+mininet> h1 python3 server_client/time_server.py --host 10.0.0.1 --port 5000 &
 ```
 
-Replace `/absolute/path/to` with the actual project path.
-
-For convenience, from the project directory:
-
-```bash
-pwd
-```
-
-Then use the displayed absolute path.
+The trailing `&` runs the server in the background so the Mininet prompt stays usable. The command is run from the
+repository root (the directory Mininet was started from), so a relative path works.
 
 ---
 
@@ -139,18 +128,13 @@ Then use the displayed absolute path.
 In the Mininet CLI:
 
 ```bash
-mininet> h2 python3 /absolute/path/to/sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100
+mininet> h2 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100
 ```
 
-The client prints:
-
-- T1
-- T2
-- T3
-- T4
-- RTT
-- Offset
-- synchronization error
+For each sample the client prints the sequence number, round-trip delay (RTT), estimated offset and absolute
+synchronization error (all in ms). After the last sample it prints the number of successful samples, the average RTT, the
+average offset and the mean absolute error. The four raw timestamps (T1 to T4) are used in the calculation but are not
+printed.
 
 The `--skew-ms` option simulates a client clock difference without changing
 the real Linux system clock.
@@ -160,7 +144,7 @@ the real Linux system clock.
 ## 6. Run client 2
 
 ```bash
-mininet> h3 python3 /absolute/path/to/sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms -50
+mininet> h3 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms -50
 ```
 
 This demonstrates multiple clients.
@@ -205,7 +189,7 @@ mininet> h2 tc qdisc add dev h2-eth0 root netem delay 50ms
 Run the client again:
 
 ```bash
-mininet> h2 python3 /absolute/path/to/sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100
+mininet> h2 python3 sandbox/d1/server_client/time_client.py --server 10.0.0.1 --port 5000 --samples 10 --skew-ms 100
 ```
 
 Compare RTT with and without the delay.
