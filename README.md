@@ -12,11 +12,10 @@ Educational project for PES University coursework (Computer Networks). Team of t
 2. [What it does](#what-it-does)
 3. [Architecture](#architecture)
 4. [Results and screenshots](#results-and-screenshots)
-5. [Video demo](#video-demo)
-6. [Team contributions](#team-contributions)
-7. [Repository layout](#repository-layout)
-8. [Install and run](#install-and-run)
-9. [Limitations](#limitations)
+5. [Team contributions](#team-contributions)
+6. [Repository layout](#repository-layout)
+7. [Install and run](#install-and-run)
+8. [Limitations](#limitations)
 
 ## Objectives
 
@@ -95,11 +94,6 @@ it. The overload load was nominally 30M but measured about 19.5 Mbit/s at the se
 
 More images and the list of live terminal captures: [`screenshots/`](screenshots/README.md).
 
-## Video demo
-
-<!-- Replace the line below with the real link once the video is uploaded. -->
-Video link: **TODO (add the YouTube / release link here)**. Script and timings: [docs/VIDEO_DEMO_SCRIPT.md](docs/VIDEO_DEMO_SCRIPT.md).
-
 ## Team contributions
 
 Summary table and per-track details: [CONTRIBUTIONS.md](CONTRIBUTIONS.md).
@@ -116,7 +110,7 @@ Summary table and per-track details: [CONTRIBUTIONS.md](CONTRIBUTIONS.md).
 | `tests/` | Unit tests (no root needed) |
 | `run_d2.sh` | One command: tests, run, PASS/FAIL table |
 | `scripts/install_ubuntu.sh` | Installs Mininet, Open vSwitch and a pinned Ryu venv |
-| `docs/` | `ARCHITECTURE.md`, `D2_REPORT.md`, `SYNC_LOOP.md`, `VIDEO_DEMO_SCRIPT.md` |
+| `docs/` | `ARCHITECTURE.md`, `D2_REPORT.md`, `SYNC_LOOP.md` |
 | `screenshots/` | Result figures and replay-page renderings |
 | `CONTRIBUTIONS.md` | Who did what |
 
