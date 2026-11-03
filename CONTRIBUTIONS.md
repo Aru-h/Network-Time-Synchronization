@@ -3,13 +3,11 @@
 Topic 23, Network Time Synchronization System (PES University, Computer Networks). Team of three, split into three tracks.
 The track names below are the ones used inside the repository itself (see `evaluation/README.md`).
 
-<!-- BEFORE SUBMITTING: replace every <...> placeholder below with the real name / SRN / task, then delete this comment. -->
-
 | Member | SRN | Track | One-line summary |
 |---|---|---|---|
 | Harush S G Temkar | PES1UG25CS204 | Track A: core time synchronization | UDP time server and client, four-timestamp RTT/offset, Mininet topology, socket-SDN integration, D1 demo. |
-| <Teammate 2 name> | <SRN> | Track B: dynamic SDN | Ryu controller behaviour: congestion detection, priority escalation, QoS (`set_queue`) path. |
-| <Teammate 3 name> | <SRN> | Track C: robustness, evaluation, documentation | Test scenarios, automated runner, result analysis, report. |
+| Keshava G Kaushik | PES1UG25CS252 | Track B: dynamic SDN | Ryu controller behaviour: congestion detection, priority escalation, QoS (`set_queue`) path. |
+| K Sai Nihal | PES1UG25CS234 | Track C: robustness, evaluation, documentation | Test scenarios, automated runner, result analysis, report. |
 
 ## Track A: core time synchronization (Harush S G Temkar)
 
@@ -23,24 +21,24 @@ The track names below are the ones used inside the repository itself (see `evalu
 - Found and documented the run-order pitfall (running `pingall` first stops the sync flow from being installed) and the
   controlled 50 ms delay experiment.
 - D1 report, demo script and checklist (`sandbox/d1/docs/`, `sandbox/d1/D1_CHECKLIST.md`).
+- Software-clock sync loop (`server_client/sync_loop.py`, `softclock.py`, `agefilter.py`, `docs/SYNC_LOOP.md`): measures the
+  offset, filters samples by age and RTT, then steps or slews a software clock with a PI controller. Its checks are
+  `evaluation/code/sync_loop_check.py` and `evaluation/ubuntu_runner/run_sync_loop.sh`.
 
-## Track B: dynamic SDN (<Teammate 2 name>)
+## Track B: dynamic SDN (Keshava G Kaushik)
 
 - D2 adaptive controller (`controller/d2_adaptive_controller.py`): congestion detection on OpenFlow port 1 with
   hysteresis, proactive priority-200 sync flows, revert when load clears.
 - OVS QoS path (`mininet/d2_qos.py`, `D2_QOS=on`): linux-htb queues and `set_queue:1` on sync flows.
 - D2 topology (`mininet/d2_topology.py`).
-- <Add or correct specifics.>
 
-## Track C: robustness, evaluation, documentation (<Teammate 3 name>)
+## Track C: robustness, evaluation, documentation (K Sai Nihal)
 
 - Evaluation client and scenarios (`evaluation/code/robustness_eval.py`, `evaluation/ubuntu_runner/`): baseline, delay,
   load below and above capacity, load plus delay, server failure and recovery.
 - Automated runner and PASS/FAIL checks (`run_d2.sh`, `evaluation/code/flow_assertions.py`, `tests/`).
 - Result tables, report generation and replay page (`evaluation/code/fill_report.py`, `build_replay.py`,
   `docs/D2_REPORT.md`, `evaluation/RESULT_STATUS.md`).
-- Software-clock sync loop and its checks (`docs/SYNC_LOOP.md`, `server_client/sync_loop.py`) <confirm who built this>.
-- <Add or correct specifics.>
 
 ## Shared work
 
